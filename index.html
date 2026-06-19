@@ -665,60 +665,59 @@
         // ==========================================
         // SEKMELER VE DİNAMİK CSS
         // ==========================================
-        // *** GELİŞTİRİLMİŞ PDF TASARIMI (pasta grafiği, kriterler vs. korunuyor) ***
         const cssPrintAnaliz = `@media print{
-            @page{size:A4 portrait;margin:8mm 10mm 8mm 10mm;}
+            @page{size:A4 portrait;margin:5mm 6mm 5mm 6mm;}
             *{box-sizing:border-box!important;}
             html,body{width:100%;height:100%;margin:0!important;padding:0!important;background:#fff;font-family:'Times New Roman',Times,serif;color:#000;}
             .no-print,.container{display:none!important;}
             .print-only{display:flex!important;flex-direction:column;width:100%;height:277mm;overflow:hidden;padding:0;}
             h1,h2,h3,p,div{margin:0;padding:0;}
             
-            .official-header{text-align:center;font-weight:bold;font-size:11pt;line-height:1.4;margin-bottom:6px;color:#1a3a5c;letter-spacing:0.3px;}
-            .official-header .okul{font-size:13pt;}
-            .official-header .alt{font-size:11pt;}
+            .official-header{text-align:center;font-weight:bold;font-size:10pt;line-height:1.3;margin-bottom:3px;color:#1a3a5c;letter-spacing:0.2px;}
+            .official-header .okul{font-size:12pt;}
+            .official-header .alt{font-size:10pt;}
             
-            table{width:100%;border-collapse:collapse;margin-bottom:3px;font-size:6.5pt;table-layout:fixed;}
-            th,td{border:1px solid #222!important;padding:2px 1px!important;text-align:center;vertical-align:middle;}
-            th{background:#d4e6f1!important;-webkit-print-color-adjust:exact;font-weight:bold;color:#154360;font-size:6pt;}
-            .text-left{text-align:left!important;padding-left:4px!important;}
+            table{width:100%;border-collapse:collapse;margin-bottom:2px;font-size:5.5pt;table-layout:fixed;}
+            th,td{border:1px solid #222!important;padding:1px 1px!important;text-align:center;vertical-align:middle;}
+            th{background:#d4e6f1!important;-webkit-print-color-adjust:exact;font-weight:bold;color:#154360;font-size:5.5pt;}
+            .text-left{text-align:left!important;padding-left:2px!important;}
             
-            .summary-grids{display:flex;justify-content:space-between;align-items:stretch;gap:6px;margin-bottom:4px;}
-            .summary-grids table{margin-bottom:0;font-size:6pt;}
-            .summary-grids table th{background:#e6eef9!important;font-size:5.5pt;}
-            .summary-grids table td{padding:1px 3px!important;}
+            .summary-grids{display:flex;justify-content:space-between;align-items:stretch;gap:4px;margin-bottom:2px;}
+            .summary-grids table{margin-bottom:0;font-size:5.5pt;}
+            .summary-grids table th{background:#e6eef9!important;font-size:5pt;}
+            .summary-grids table td{padding:1px 2px!important;}
             
-            .pie-container{width:70px;text-align:center;font-weight:bold;font-size:6pt;}
-            canvas#pieChart{width:70px!important;height:70px!important;margin:0 auto;display:block;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+            .pie-container{width:60px;text-align:center;font-weight:bold;font-size:5.5pt;}
+            canvas#pieChart{width:60px!important;height:60px!important;margin:0 auto;display:block;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
             
-            .section-title{font-weight:bold;font-size:7pt;margin:3px 0 2px;border-bottom:1.5px solid #aaa;padding-bottom:1px;color:#1a3a5c;}
+            .section-title{font-weight:bold;font-size:6.5pt;margin:2px 0 1px;border-bottom:1px solid #aaa;padding-bottom:1px;color:#1a3a5c;}
             
-            .kazanim-split{display:flex;gap:5px;margin-bottom:3px;}
+            .kazanim-split{display:flex;gap:4px;margin-bottom:2px;}
             .kazanim-table-pdf{margin-bottom:0;}
-            .col-kaz-soru{width:8%;}
-            .col-kaz-metin{width:50%;}
-            .col-kaz-puan{width:8%;}
+            .col-kaz-soru{width:7%;}
+            .col-kaz-metin{width:52%;}
+            .col-kaz-puan{width:7%;}
             .col-kaz-basari{width:12%;}
             .col-kaz-drm{width:22%;font-weight:bold;}
             
-            .chart-container{text-align:center;margin:3px 0;height:42px;}
-            canvas#nativeChart{width:100%!important;height:42px!important;}
+            .chart-container{text-align:center;margin:2px 0;height:36px;}
+            canvas#nativeChart{width:100%!important;height:36px!important;}
             
-            .pdf-ogr-table .col-sira{width:4%;}
-            .pdf-ogr-table .col-okulno{width:7%;}
-            .pdf-ogr-table .col-isim{width:18%;}
-            .pdf-ogr-table .col-toplam{width:6%;background:#dff0d8!important;-webkit-print-color-adjust:exact;font-weight:bold;color:#1e7e34;}
-            .pdf-ogr-table .col-durum{width:7%;font-weight:bold;}
-            .pdf-ogr-table .col-girmedi{width:7%;background:#fadbd8!important;-webkit-print-color-adjust:exact;font-weight:bold;color:#a93226;}
-            .pdf-ogr-table td{height:9px;line-height:9px;font-size:5.5pt;}
-            .pdf-ogr-table th{font-size:5.5pt;}
-            .limit-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+            .pdf-ogr-table .col-sira{width:3.5%;}
+            .pdf-ogr-table .col-okulno{width:6%;}
+            .pdf-ogr-table .col-isim{width:16%;}
+            .pdf-ogr-table .col-toplam{width:5%;background:#dff0d8!important;-webkit-print-color-adjust:exact;font-weight:bold;color:#1e7e34;}
+            .pdf-ogr-table .col-durum{width:6%;font-weight:bold;}
+            .pdf-ogr-table .col-girmedi{width:6%;background:#fadbd8!important;-webkit-print-color-adjust:exact;font-weight:bold;color:#a93226;}
+            .pdf-ogr-table td{height:7px;line-height:7px;font-size:5pt;padding:0px 1px!important;}
+            .pdf-ogr-table th{font-size:5pt;padding:1px 1px!important;}
+            .limit-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;}
             
-            .bottom-area{margin-top:auto;padding-top:4px;}
-            .auto-evaluation{padding:3px 5px;border:1px solid #333;background:#f8f9fa;text-align:justify;font-size:6pt;line-height:1.25;white-space:normal;margin-bottom:3px;}
-            .signatures{display:flex;justify-content:space-between;text-align:center;font-size:8pt;margin-top:4px;}
+            .bottom-area{margin-top:auto;padding-top:2px;}
+            .auto-evaluation{padding:2px 4px;border:1px solid #333;background:#f8f9fa;text-align:justify;font-size:5.5pt;line-height:1.2;white-space:normal;margin-bottom:2px;}
+            .signatures{display:flex;justify-content:space-between;text-align:center;font-size:7.5pt;margin-top:2px;}
             .signature-box{width:40%;}
-            .print-footer{text-align:right;font-size:5.5pt;color:#555;border-top:1px solid #ccc;padding-top:2px;margin-top:3px;font-style:italic;}
+            .print-footer{text-align:right;font-size:5pt;color:#555;border-top:1px solid #ccc;padding-top:1px;margin-top:2px;font-style:italic;}
         }`;
 
         const cssPrintPerf = `@media print{
@@ -759,6 +758,197 @@
             if (tab === 'analiz') document.getElementById('dynamicPrintCss').innerHTML = cssPrintAnaliz;
             else if (tab === 'perf') document.getElementById('dynamicPrintCss').innerHTML = cssPrintPerf;
             else document.getElementById('dynamicPrintCss').innerHTML = cssPrintIletisim;
+            saveState(); // sekme değişince kaydet
+        }
+
+        // ==========================================
+        // localStorage İLE STATE KAYDETME / YÜKLEME
+        // ==========================================
+        function saveState() {
+            try {
+                const state = {
+                    // Sınav Analizi - Kurum Bilgileri
+                    a_okulAdi: document.getElementById('a_okulAdi').value,
+                    a_egitimYili: document.getElementById('a_egitimYili').value,
+                    a_dersAdi: document.getElementById('a_dersAdi').value,
+                    a_sinavNo: document.getElementById('a_sinavNo').value,
+                    a_ogretmenAdi: document.getElementById('a_ogretmenAdi').value,
+                    a_mudurAdi: document.getElementById('a_mudurAdi').value,
+
+                    // Sınav Analizi - Kazanım Listesi (HTML içeriği)
+                    a_kazanimListesi: document.getElementById('a_kazanimListesi').innerHTML,
+
+                    // Sınav Analizi - Toplu Kazanım Input
+                    a_topluKazanimInput: document.getElementById('a_topluKazanimInput').value,
+
+                    // Sınav Analizi - Öğrenci Not Matrisi (tüm input ve checkbox değerleri)
+                    a_notMatrisi: {},
+                    a_girmediCheckbox: {},
+
+                    // Sınav Analizi - Sınav Seçimi
+                    a_seciliSinav: document.getElementById('a_seciliSinav').value,
+
+                    // Performans-Proje - Genel Bilgiler
+                    p_okulAdi: document.getElementById('p_okulAdi').value,
+                    p_egitimYili: document.getElementById('p_egitimYili').value,
+                    p_dersAdi: document.getElementById('p_dersAdi').value,
+                    p_ogretmenAdi: document.getElementById('p_ogretmenAdi').value,
+                    p_mudurAdi: document.getElementById('p_mudurAdi').value,
+                    p_evrakTuru: document.getElementById('p_evrakTuru').value,
+                    p_kriterlerInput: document.getElementById('p_kriterlerInput').value,
+
+                    // Performans-Proje - Öğrenci Grid'i
+                    p_gridData: {}
+                };
+
+                // Not matrisini tarayalım
+                const tbody = document.getElementById('a_notTablosuBody');
+                if (tbody) {
+                    const rows = tbody.querySelectorAll('tr');
+                    rows.forEach((row, idx) => {
+                        const inputs = row.querySelectorAll('input');
+                        const okulNo = document.getElementById(`a_okulNo_${idx}`)?.value || '';
+                        const isim = document.getElementById(`a_isim_${idx}`)?.value || '';
+                        state.a_notMatrisi[`okulNo_${idx}`] = okulNo;
+                        state.a_notMatrisi[`isim_${idx}`] = isim;
+                        inputs.forEach(inp => {
+                            if (inp.type === 'checkbox') {
+                                state.a_girmediCheckbox[inp.id] = inp.checked;
+                            } else {
+                                state.a_notMatrisi[inp.id] = inp.value;
+                            }
+                        });
+                    });
+                }
+
+                // Performans-Proje Grid'i
+                const pGrid = document.getElementById('p_gridBody');
+                if (pGrid) {
+                    const pRows = pGrid.querySelectorAll('tr');
+                    pRows.forEach((row, idx) => {
+                        const inputs = row.querySelectorAll('input');
+                        inputs.forEach(inp => {
+                            state.p_gridData[inp.id] = inp.value;
+                        });
+                    });
+                }
+
+                localStorage.setItem('eOkulOtomasyonState', JSON.stringify(state));
+            } catch (e) {
+                console.warn('State kaydedilirken hata:', e);
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('eOkulOtomasyonState');
+                if (!saved) return;
+                const state = JSON.parse(saved);
+
+                // Sınav Analizi - Kurum Bilgileri
+                if (state.a_okulAdi) document.getElementById('a_okulAdi').value = state.a_okulAdi;
+                if (state.a_egitimYili) document.getElementById('a_egitimYili').value = state.a_egitimYili;
+                if (state.a_dersAdi) document.getElementById('a_dersAdi').value = state.a_dersAdi;
+                if (state.a_sinavNo) document.getElementById('a_sinavNo').value = state.a_sinavNo;
+                if (state.a_ogretmenAdi) document.getElementById('a_ogretmenAdi').value = state.a_ogretmenAdi;
+                if (state.a_mudurAdi) document.getElementById('a_mudurAdi').value = state.a_mudurAdi;
+
+                // Toplu Kazanım Input
+                if (state.a_topluKazanimInput) document.getElementById('a_topluKazanimInput').value = state.a_topluKazanimInput;
+
+                // Kazanım Listesi
+                if (state.a_kazanimListesi) {
+                    document.getElementById('a_kazanimListesi').innerHTML = state.a_kazanimListesi;
+                    // Yeniden olayları bağla (silme butonları için)
+                    document.querySelectorAll('#a_kazanimListesi .btn-danger').forEach(btn => {
+                        btn.onclick = function(e) {
+                            const satir = this.parentElement;
+                            satir.remove();
+                            a_soruSayisi--;
+                            a_tabloOlustur();
+                            saveState();
+                        };
+                    });
+                    // input olaylarını yeniden bağla
+                    document.querySelectorAll('#a_kazanimListesi .a-kazanim-puani').forEach(inp => {
+                        inp.oninput = function() {
+                            a_tabloOlustur();
+                            saveState();
+                        };
+                    });
+                    // a_soruSayisi'ni güncelle
+                    a_soruSayisi = document.querySelectorAll('#a_kazanimListesi .kazanim-satiri').length;
+                }
+
+                // Sınav Seçimi
+                if (state.a_seciliSinav) document.getElementById('a_seciliSinav').value = state.a_seciliSinav;
+
+                // Not Matrisi - önce tabloyu oluştur (kazanımlar varsa)
+                if (a_soruSayisi > 0) {
+                    a_tabloOlustur();
+                }
+
+                // Matris verilerini doldur (a_tabloOlustur'dan sonra)
+                if (state.a_notMatrisi) {
+                    Object.keys(state.a_notMatrisi).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = state.a_notMatrisi[key];
+                    });
+                }
+                if (state.a_girmediCheckbox) {
+                    Object.keys(state.a_girmediCheckbox).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el && el.type === 'checkbox') el.checked = state.a_girmediCheckbox[key];
+                    });
+                }
+
+                // Toplamları yeniden hesapla
+                for (let i = 0; i < MAX_OGRENCI; i++) {
+                    a_toplamHesapla(i);
+                }
+
+                // Performans-Proje
+                if (state.p_okulAdi) document.getElementById('p_okulAdi').value = state.p_okulAdi;
+                if (state.p_egitimYili) document.getElementById('p_egitimYili').value = state.p_egitimYili;
+                if (state.p_dersAdi) document.getElementById('p_dersAdi').value = state.p_dersAdi;
+                if (state.p_ogretmenAdi) document.getElementById('p_ogretmenAdi').value = state.p_ogretmenAdi;
+                if (state.p_mudurAdi) document.getElementById('p_mudurAdi').value = state.p_mudurAdi;
+                if (state.p_evrakTuru) {
+                    document.getElementById('p_evrakTuru').value = state.p_evrakTuru;
+                    p_kriterleriGuncelle();
+                }
+                if (state.p_kriterlerInput) document.getElementById('p_kriterlerInput').value = state.p_kriterlerInput;
+
+                // Performans-Proje Grid verileri
+                if (state.p_gridData) {
+                    Object.keys(state.p_gridData).forEach(key => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = state.p_gridData[key];
+                    });
+                }
+
+                // Eğer kazanım listesi doluysa not giriş alanını göster
+                if (a_soruSayisi > 0) {
+                    document.getElementById('a_notGirisAlani').style.display = 'block';
+                }
+
+                console.log('State başarıyla yüklendi.');
+            } catch (e) {
+                console.warn('State yüklenirken hata:', e);
+            }
+        }
+
+        // Otomatik kaydetme için event listener'lar
+        function attachAutoSave() {
+            // Tüm input, select, textarea değişikliklerini dinle
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                el.addEventListener('change', saveState);
+                el.addEventListener('input', saveState);
+            });
+            // Checkbox'lar için ayrıca click
+            document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+                el.addEventListener('click', saveState);
+            });
         }
 
         // ==========================================
@@ -800,6 +990,7 @@
                     `<option value="${s}">${s}</option>`);
                 document.getElementById('filtre-alani').style.display = 'flex';
                 btn.style.display = 'none';
+                saveState();
             } catch (e) { alert(`❌ BAĞLANTI HATASI:\n\n${e.message}`);
                 btn.innerText = "🔄 Yeniden Dene";
                 btn.disabled = false; }
@@ -823,6 +1014,7 @@
             kazanimVeritabani.forEach(item => { if (item.sinif === sinif && item.kategori !== "") set.add(item.kategori); });
             Array.from(set).sort().forEach(k => secK.innerHTML += `<option value="${k}">${k}</option>`);
             secK.disabled = false;
+            saveState();
         }
 
         function filtreleDersler() {
@@ -843,6 +1035,7 @@
                     set.add(item.ders); });
             Array.from(set).sort().forEach(d => secD.innerHTML += `<option value="${d}">${d}</option>`);
             secD.disabled = false;
+            saveState();
         }
 
         function filtreleKazanimlar() {
@@ -860,6 +1053,7 @@
                     secKaz.innerHTML +=
                     `<option value="${item.kazanim}" data-puan="${item.puan}">${item.kazanim}</option>`; });
             secKaz.disabled = false;
+            saveState();
         }
 
         function puanDoldur() {
@@ -870,6 +1064,7 @@
                 ip.disabled = btn.disabled = true; return; }
             ip.value = sec.options[sec.selectedIndex].getAttribute('data-puan');
             ip.disabled = btn.disabled = false;
+            saveState();
         }
 
         function seciliKazanimiTabloyaEkle() {
@@ -882,6 +1077,7 @@
             document.getElementById('a_secilenPuan').value = "";
             document.getElementById('a_secilenPuan').disabled = true;
             document.getElementById('btn-kazanim-ekle').disabled = true;
+            saveState();
         }
 
         // ==========================================
@@ -944,6 +1140,7 @@
                 if (input) input.value = dagitim[j];
             }
             a_toplamHesapla(index);
+            saveState();
         }
 
         function a_tumOgrencilereDagit() {
@@ -963,6 +1160,7 @@
                 }
             }
             alert(sayac + " öğrenciye dağıtım yapıldı.");
+            saveState();
         }
 
         function a_kazanimlariAktar() {
@@ -990,6 +1188,7 @@
                 a_kazanimSatiriEkleDegerli(desc, pts);
             });
             a_tabloOlustur();
+            saveState();
         }
 
         function a_kazanimSatiriEkleDegerli(metin, puan) {
@@ -1001,9 +1200,15 @@
             div.innerHTML =
                 `<span style="font-weight:bold;width:60px;">Soru ${a_soruSayisi}</span>
                         <input type="text" placeholder="Kazanım açıklaması..." class="a-kazanim-metni" value="${metin}">
-                        <input type="number" placeholder="Puan" class="a-kazanim-puani" min="1" value="${puan}" oninput="a_tabloOlustur()">
-                        <button class="btn-danger" onclick="this.parentElement.remove(); a_soruSayisi--; a_tabloOlustur();">Sil</button>`;
+                        <input type="number" placeholder="Puan" class="a-kazanim-puani" min="1" value="${puan}" oninput="a_tabloOlustur(); saveState();">
+                        <button class="btn-danger" onclick="this.parentElement.remove(); a_soruSayisi--; a_tabloOlustur(); saveState();">Sil</button>`;
             document.getElementById('a_kazanimListesi').appendChild(div);
+            // input değişikliklerini dinle
+            div.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('change', saveState);
+                inp.addEventListener('input', saveState);
+            });
+            saveState();
         }
 
         function a_tabloOlustur() {
@@ -1050,27 +1255,58 @@
                 a_uiKazanimlar.forEach((k, kIndex) => {
                     let sc = d.scores[kIndex] || "";
                     tbodyHTML +=
-                        `<td><input type="number" min="0" max="${k.maxPuan}" id="a_not_${i}_${kIndex}" value="${sc}" onfocus="this.select()" oninput="a_toplamHesapla(${i})"></td>`;
+                        `<td><input type="number" min="0" max="${k.maxPuan}" id="a_not_${i}_${kIndex}" value="${sc}" onfocus="this.select()" oninput="a_toplamHesapla(${i}); saveState();"></td>`;
                 });
                 tbodyHTML += `<td id="a_toplam_${i}" style="font-weight:bold;background:#f5f5f5;font-size:14px;color:#c0392b;"></td>
                         <td id="a_durum_${i}" style="font-weight:bold;font-size:12px;"></td>
-                        <td><input type="checkbox" id="a_girmedi_${i}" class="checkbox-girmedi" onchange="a_toplamHesapla(${i})" ${d.girmedi?'checked':''}></td>
+                        <td><input type="checkbox" id="a_girmedi_${i}" class="checkbox-girmedi" onchange="a_toplamHesapla(${i}); saveState();" ${d.girmedi?'checked':''}></td>
                         <td><button class="btn-dagit" onclick="a_dagitOgrenci(${i})">Dağıt</button></td>
                         <td><button class="btn-clear" onclick="a_satirTemizle(${i})">X</button></td></tr>`;
             }
             document.getElementById('a_notTablosuBody').innerHTML = tbodyHTML;
             document.getElementById('a_notGirisAlani').style.display = 'block';
             for (let i = 0; i < MAX_OGRENCI; i++) a_toplamHesapla(i);
+
+            // Yeni oluşturulan input'ları dinle
+            document.querySelectorAll('#a_notTablosuBody input, #a_notTablosuBody select').forEach(el => {
+                el.addEventListener('change', saveState);
+                el.addEventListener('input', saveState);
+            });
+            document.querySelectorAll('#a_notTablosuBody input[type="checkbox"]').forEach(el => {
+                el.addEventListener('click', saveState);
+            });
+            // Butonlar zaten onclick ile çağrılıyor, saveState içlerinde var
         }
 
+        // *** GÜNCELLENMİŞ EXCEL AKTARIMI (eski veriler temizleniyor) ***
         function a_excelListesiAktar() {
             let raw = document.getElementById('a_rawEokulData').value.trim();
             if (!raw) { alert("Lütfen Excel verisini yapıştırın."); return; }
-            let lines = raw.split('\n');
-            let index = 0;
+
+            // ---- 1. MEVCUT TABLODAKİ TÜM VERİLERİ TEMİZLE ----
+            const tbody = document.getElementById('a_notTablosuBody');
+            if (tbody) {
+                const inputs = tbody.querySelectorAll('input');
+                inputs.forEach(inp => {
+                    if (inp.type === 'checkbox') {
+                        inp.checked = false;
+                    } else {
+                        inp.value = '';
+                    }
+                });
+                const tds = tbody.querySelectorAll('td[id^="a_toplam_"], td[id^="a_durum_"]');
+                tds.forEach(td => td.innerText = '');
+            }
+
+            // ---- 2. ÖĞRENCİ NOT DİZİSİNİ SIFIRLA ----
             ogrenciSinavNotlari = [];
             for (let i = 0; i < MAX_OGRENCI; i++) ogrenciSinavNotlari[i] = ["", "", ""];
+
+            // ---- 3. YENİ VERİYİ OKU VE DOLDUR ----
+            let lines = raw.split('\n');
+            let index = 0;
             let notVarMi = false;
+
             lines.forEach(line => {
                 if (!line.trim()) return;
                 let parts = line.split('\t');
@@ -1089,36 +1325,56 @@
                         let not1 = bulunanNotlar.length > 0 ? bulunanNotlar[0] : "";
                         let not2 = bulunanNotlar.length > 1 ? bulunanNotlar[1] : "";
                         let not3 = bulunanNotlar.length > 2 ? bulunanNotlar[2] : "";
+
                         let noInput = document.getElementById(`a_okulNo_${index}`);
                         let isimInput = document.getElementById(`a_isim_${index}`);
                         if (noInput) noInput.value = okulNo;
                         if (isimInput) isimInput.value = isim;
+
                         let n1 = (not1 === "G" || not1 === "M" || not1 === "") ? "" : parseFloat(not1.replace(',', '.'));
                         let n2 = (not2 === "G" || not2 === "M" || not2 === "") ? "" : parseFloat(not2.replace(',', '.'));
                         let n3 = (not3 === "G" || not3 === "M" || not3 === "") ? "" : parseFloat(not3.replace(',', '.'));
+
                         ogrenciSinavNotlari[index] = [
                             isNaN(n1) ? "" : n1,
                             isNaN(n2) ? "" : n2,
                             isNaN(n3) ? "" : n3
                         ];
+
                         let girmediCheck = document.getElementById(`a_girmedi_${index}`);
                         if (girmediCheck) {
-                            if (not1 === "G" || not2 === "G" || not3 === "G") { girmediCheck.checked = true; } else if (n1 !==
-                                "" || n2 !== "" || n3 !== "") { girmediCheck.checked = false; } else if (n1 === "" && n2 ===
-                                "" && n3 === "") { girmediCheck.checked = true; }
+                            if (not1 === "G" || not2 === "G" || not3 === "G") {
+                                girmediCheck.checked = true;
+                            } else if (n1 !== "" || n2 !== "" || n3 !== "") {
+                                girmediCheck.checked = false;
+                            } else if (n1 === "" && n2 === "" && n3 === "") {
+                                girmediCheck.checked = true;
+                            }
                         }
+
                         if (n1 !== "" || n2 !== "" || n3 !== "" || not1 === "G") notVarMi = true;
                         index++;
                     }
                 }
             });
-            if (index === 0) { alert("Öğrenci bulunamadı. Lütfen A sütunundan itibaren doğru seçtiğinizden emin olun."); return; }
+
+            if (index === 0) {
+                alert("Öğrenci bulunamadı. Lütfen A sütunundan itibaren doğru seçtiğinizden emin olun.");
+                return;
+            }
+
             document.getElementById('a_rawEokulData').value = "";
-            if (!notVarMi) { alert(index +
+            if (!notVarMi) {
+                alert(index +
                     " öğrenci eklendi, ancak NOT BULUNAMADI! E-Okul'dan notları da kapsayacak şekilde kopyaladığınıza emin olun."
-                    ); } else { alert(index +
+                    );
+            } else {
+                alert(index +
                     " öğrenci eklendi ve notlar başarıyla alındı.\n\"G\" olan notlar otomatik olarak \"Girmedi\" işaretlendi."
-                    ); }
+                    );
+            }
+
+            // ---- 4. SINAV SEÇİM DROPDOWN'INI GÜNCELLE ----
             let dropdown = document.getElementById('a_seciliSinav');
             dropdown.innerHTML = '';
             for (let i = 0; i < 3; i++) {
@@ -1127,7 +1383,10 @@
                 opt.textContent = (i + 1) + '. Sınav';
                 dropdown.appendChild(opt);
             }
+
+            // ---- 5. TABLOYU YENİDEN OLUŞTUR ----
             a_tabloOlustur();
+            saveState();
         }
 
         function a_toplamHesapla(oIndex) {
@@ -1153,6 +1412,7 @@
                 toplamTd.innerText = "";
                 if (durum) durum.innerText = "";
             }
+            // saveState burada çağrılmıyor, input onchange zaten çağırıyor
         }
 
         function a_satirTemizle(index) {
@@ -1161,6 +1421,7 @@
             a_uiKazanimlar.forEach((k, kIndex) => { document.getElementById(`a_not_${index}_${kIndex}`).value = ""; });
             document.getElementById(`a_girmedi_${index}`).checked = false;
             a_toplamHesapla(index);
+            saveState();
         }
 
         function a_rastgeleNotDoldur() {
@@ -1182,6 +1443,7 @@
                     a_toplamHesapla(i);
                 }
             }
+            saveState();
         }
 
         // *** GELİŞTİRİLMİŞ PASTA GRAFİĞİ ***
@@ -1308,8 +1570,10 @@
             ctx.stroke();
         }
 
-        // *** PDF RAPORU - ESKİ HALİYLE (metin kutularından okuyor) ***
         function a_pdfRaporuHazirla() {
+            // Önce state'i kaydet
+            saveState();
+
             const okul = document.getElementById('a_okulAdi').value;
             const egitimYili = document.getElementById('a_egitimYili').value;
             const ders = document.getElementById('a_dersAdi').value;
@@ -1397,13 +1661,13 @@
                         c = y >= 70 ? "#1e7e34" : (y >= 50 ? "#b9770e" : "#a93226");
                     let kMetin = a_uiKazanimlar[i].metin,
                         len = kMetin.length;
-                    let fSize = "6.5pt",
+                    let fSize = "5.5pt",
                         lSpace = "normal";
-                    if (len > 150) { fSize = "5pt";
-                        lSpace = "-0.2px"; } else if (len > 110) { fSize = "5.5pt";
+                    if (len > 150) { fSize = "4.5pt";
+                        lSpace = "-0.2px"; } else if (len > 110) { fSize = "5pt";
                         lSpace = "-0.1px"; }
                     tab +=
-                        `<tr><td class="col-kaz-soru">S.${i+1}</td><td class="col-kaz-metin text-left" style="font-size:${fSize};letter-spacing:${lSpace};white-space:nowrap;overflow:hidden;">${kMetin}</td><td class="col-kaz-puan">${a_uiKazanimlar[i].maxPuan}</td><td class="col-kaz-basari">%${y.toFixed(0)}</td><td class="col-kaz-drm" style="color:${c};font-size:6pt;"><b>${drm}</b></td></tr>`;
+                        `<tr><td class="col-kaz-soru">S.${i+1}</td><td class="col-kaz-metin text-left" style="font-size:${fSize};letter-spacing:${lSpace};white-space:nowrap;overflow:hidden;">${kMetin}</td><td class="col-kaz-puan">${a_uiKazanimlar[i].maxPuan}</td><td class="col-kaz-basari">%${y.toFixed(0)}</td><td class="col-kaz-drm" style="color:${c};font-size:5.5pt;"><b>${drm}</b></td></tr>`;
                 }
                 kazanimBolumu =
                     `<table class="kazanim-table-pdf" style="width:100%;"><thead><tr><th class="col-kaz-soru">Soru</th><th class="col-kaz-metin">Ölçülen Kazanım</th><th class="col-kaz-puan">Puan</th><th class="col-kaz-basari">Başarı</th><th class="col-kaz-drm">Durum</th></tr></thead><tbody>${tab}</tbody></table>`;
@@ -1418,14 +1682,14 @@
                             c = y >= 70 ? "#1e7e34" : (y >= 50 ? "#b9770e" : "#a93226");
                         let kMetin = a_uiKazanimlar[i].metin,
                             len = kMetin.length;
-                        let fSize = "5.5pt",
+                        let fSize = "5pt",
                             lSpace = "normal";
                         if (len > 115) { fSize = "3.8pt";
                             lSpace = "-0.4px"; } else if (len > 85) { fSize = "4.2pt";
                             lSpace = "-0.2px"; } else if (len > 55) { fSize = "4.8pt";
                             lSpace = "-0.1px"; }
                         row =
-                            `<tr><td class="col-kaz-soru">S.${i+1}</td><td class="col-kaz-metin text-left" style="font-size:${fSize};letter-spacing:${lSpace};white-space:nowrap;overflow:hidden;">${kMetin}</td><td class="col-kaz-puan">${a_uiKazanimlar[i].maxPuan}</td><td class="col-kaz-basari">%${y.toFixed(0)}</td><td class="col-kaz-drm" style="color:${c};font-size:5pt!important;"><b>${drm}</b></td></tr>`;
+                            `<tr><td class="col-kaz-soru">S.${i+1}</td><td class="col-kaz-metin text-left" style="font-size:${fSize};letter-spacing:${lSpace};white-space:nowrap;overflow:hidden;">${kMetin}</td><td class="col-kaz-puan">${a_uiKazanimlar[i].maxPuan}</td><td class="col-kaz-basari">%${y.toFixed(0)}</td><td class="col-kaz-drm" style="color:${c};font-size:4.5pt!important;"><b>${drm}</b></td></tr>`;
                     } else { row =
                             `<tr><td>S.${i+1}</td><td class="text-left" style="color:#aaa;">-</td><td></td><td></td><td></td></tr>`; }
                     if (i < 10) tab1 += row;
@@ -1463,7 +1727,6 @@
             if (zayif.length === 0 && ortaSeviye.length === 0 && aktifGiren > 0) otoMetin +=
                 `Sınıf genelinde tüm hedeflere ulaşılmıştır.`;
 
-            // Başlık – eski düzene göre
             let printHTML = `
                         <div class="official-header">
                             T.C.<br>
@@ -1497,7 +1760,7 @@
                             </table>
                             <div class="pie-container">
                                 <canvas id="pieChart" width="100" height="100"></canvas>
-                                <div style="font-size:5.5pt;margin-top:2px;">Başarı / Başarısızlık</div>
+                                <div style="font-size:5pt;margin-top:1px;">Başarı / Başarısızlık</div>
                             </div>
                         </div>
                         <div class="section-title">1. Kazanım Başarı Dağılım Çizelgesi</div>
@@ -1531,7 +1794,7 @@
         }
 
         // ==========================================
-        // PERFORMANS-PROJE (BEDEN EĞİTİMİ UYGULAMA KRİTERLERİ) - AYNI KALDI
+        // PERFORMANS-PROJE (BEDEN EĞİTİMİ UYGULAMA KRİTERLERİ)
         // ==========================================
         const p_olcutlerUyg1 = [
             "Isınma ve hazırlık hareketlerini doğru yapar.",
@@ -1609,6 +1872,7 @@
             else if (val === 'u3') txt.value = p_olcutlerUyg3.join('\n');
             else if (val === 'proje') txt.value = p_olcutlerProje.join('\n');
             else txt.value = p_olcutlerUyg1.join('\n');
+            saveState();
         }
 
         const p_kolonlar = ['okulNo', 'isim', 's1', 's2', 's3', 's4', 's5', 's6', 'p1', 'p2', 'p3', 'u1', 'u2', 'u3',
@@ -1617,8 +1881,26 @@
         const p_hedef = ['p1', 'p2', 'p3', 'u1', 'u2', 'u3', 'proje'];
 
         document.addEventListener("DOMContentLoaded", function() {
+            // Önce state'i yükle
+            loadState();
+
+            // Sonra otomatik kaydetmeyi başlat
+            attachAutoSave();
+
+            // Performans-Proje grid'ini oluştur
+            p_gridOlustur();
+
+            // Sekme ayarlarını yap
             switchTab('analiz');
-            p_kriterleriGuncelle();
+
+            // Kazanım listesindeki input'ları dinle (zaten loadState'de yapıldı ama tekrar emin olalım)
+            document.querySelectorAll('#a_kazanimListesi input').forEach(el => {
+                el.addEventListener('change', saveState);
+                el.addEventListener('input', saveState);
+            });
+        });
+
+        function p_gridOlustur() {
             const tbody = document.getElementById('p_gridBody');
             tbody.innerHTML = '';
             for (let i = 0; i < MAX_OGRENCI; i++) {
@@ -1640,10 +1922,16 @@
                 tr.appendChild(tdSil);
                 tbody.appendChild(tr);
             }
-        });
+            // Input değişikliklerini dinle
+            tbody.querySelectorAll('input').forEach(el => {
+                el.addEventListener('change', saveState);
+                el.addEventListener('input', saveState);
+            });
+        }
 
         function p_satirTemizle(index) {
             p_kolonlar.forEach(col => { document.getElementById(`p_${col}_${index}`).value = ""; });
+            saveState();
         }
 
         function p_excelVerileriniAktar() {
@@ -1669,6 +1957,7 @@
                 }
             });
             if (students.length === 0) { alert("Öğrenci bulunamadı."); return; }
+            // Önce mevcut grid'i temizle
             for (let i = 0; i < MAX_OGRENCI; i++) p_satirTemizle(i);
             students.forEach((s, idx) => {
                 if (idx >= MAX_OGRENCI) return;
@@ -1680,6 +1969,7 @@
             });
             document.getElementById('p_rawEokulData').value = "";
             alert(students.length + " öğrenci aktarıldı.");
+            saveState();
         }
 
         function p_dagitPuani(hedef) {
@@ -1703,6 +1993,7 @@
         }
 
         function p_pdfRaporuHazirla() {
+            saveState();
             const okul = document.getElementById('p_okulAdi').value;
             const egitim = document.getElementById('p_egitimYili').value;
             const ders = document.getElementById('p_dersAdi').value;
