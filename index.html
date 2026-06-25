@@ -73,6 +73,13 @@
         .no-print { display: block; }
         .dev-footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px dashed #ccc; font-size: 13px; color: #7f8c8d; }
         .sinav-dropdown { padding: 6px 12px; border-radius: 4px; border: 1px solid #ccc; background: #fff; font-weight: bold; }
+
+        /* --- ÖĞRENCİ ÖZEL PROJE DETAY MODALI --- */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center; }
+        .modal-content { background:#fff; width:90%; max-width:800px; max-height:90vh; overflow-y:auto; padding:25px; border-radius:8px; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
+        .modal-close { position:absolute; top:15px; right:20px; font-size:28px; cursor:pointer; color:#c0392b; font-weight:bold; line-height:1; transition:0.2s;}
+        .modal-close:hover { color:#e74c3c; transform:scale(1.1); }
+        .modal-title { margin-top:0; color:#2c3e50; border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px; font-size: 20px;}
     </style>
     <style id="dynamicPrintCss"></style>
 </head>
@@ -199,7 +206,7 @@
         </div>
 
         <div class="section" id="p_ekBilgilerAlani">
-            <h3>1B. Bireysel Proje Formu Detayları (Sadece Proje Formu Çıktısı İçin Geçerlidir)</h3>
+            <h3>1B. Bireysel Proje Formu Detayları (Genel)</h3>
             <div class="grid-2">
                 <div><label>Öğretmen Branşı:</label><input type="text" id="p_brans" value=".........................." placeholder="Boş bırakmak için nokta koyun veya branş yazın"></div>
                 <div><label>Proje Konusu (Genel):</label><input type="text" id="p_projeKonusu" value="Günlük Hayatta Karşılaşılan Kimyasal Maddelerin Fayda ve Zararlarının İncelenmesi"></div>
@@ -241,7 +248,23 @@
             <h3>4. Sınıf Genel Not Matrisi</h3>
             <div class="excel-wrapper">
                 <table class="excel-grid">
-                    <thead><tr><th style="width:30px;">Sıra</th><th>Okul No</th><th style="width:180px;">Adı Soyadı</th><th>1.Sınav</th><th>2.Sınav</th><th>3.Sınav</th><th>4.Sınav</th><th>5.Sınav</th><th>6.Sınav</th><th style="background-color:#27ae60;">1.Perf</th><th style="background-color:#27ae60;">2.Perf</th><th style="background-color:#27ae60;">3.Perf</th><th style="background-color:#27ae60;">1.Uyg</th><th style="background-color:#27ae60;">2.Uyg</th><th style="background-color:#27ae60;">3.Uyg</th><th style="background-color:#27ae60;">Proje</th><th style="background-color:#c0392b; width:40px; color:white;">Sil</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">Sıra</th>
+                            <th>Okul No</th>
+                            <th style="width:180px;">Adı Soyadı</th>
+                            <th>1.Sınav</th><th>2.Sınav</th><th>3.Sınav</th><th>4.Sınav</th><th>5.Sınav</th><th>6.Sınav</th>
+                            <th style="background-color:#27ae60;">1.Perf</th>
+                            <th style="background-color:#27ae60;">2.Perf</th>
+                            <th style="background-color:#27ae60;">3.Perf</th>
+                            <th style="background-color:#27ae60;">1.Uyg</th>
+                            <th style="background-color:#27ae60;">2.Uyg</th>
+                            <th style="background-color:#27ae60;">3.Uyg</th>
+                            <th style="background-color:#27ae60;">Proje</th>
+                            <th class="col-proje-detay" style="display:none; background-color:#8e44ad; width:55px; color:white;">Detay</th>
+                            <th style="background-color:#c0392b; width:40px; color:white;">Sil</th>
+                        </tr>
+                    </thead>
                     <tbody id="p_gridBody"></tbody>
                 </table>
             </div>
@@ -286,7 +309,7 @@
             <p>Bu modül, öğrencilerin performans, uygulama veya proje notlarını e-Okul'dan alarak MEB standartlarına uygun 10 kriterlik değerlendirme ölçeklerine dağıtır ve rubrik çıktıları üretir.</p>
             <ol>
                 <li><b>Değerlendirme Türü ve Ölçütler:</b> "Değerlendirme Türü" dropdown menüsünden ilgili evrakı (1. Performans, Uygulama Sınavı, Proje vb.) seçin. Sistem, seçiminize göre 10 adet ölçütü metin kutusuna otomatik yükleyecektir. İhtiyacınıza göre bu ölçütleri el ile düzenleyebilirsiniz.</li>
-                <li><b>Proje Ek Bilgileri (Sadece Projeler İçin Geçerli):</b> Eğer tür olarak "Proje Değerlendirme Ölçeği" seçtiyseniz <b>1B paneli</b> görünür hale gelir. Buraya branşınızı, proje konusunu, kullanılan genel kaynakları ve 6 aylık (Aralık-Mayıs) periyodik görüşme takvimini bir kez doldurun. Sistem bu verileri tüm öğrencilerin bireysel formlarına entegre edecektir.</li>
+                <li><b>Proje Ek Bilgileri (Sadece Projeler İçin Geçerli):</b> Eğer tür olarak "Proje Değerlendirme Ölçeği" seçtiyseniz <b>1B paneli</b> görünür hale gelir. Buraya branşınızı, proje konusunu, kullanılan genel kaynakları ve 6 aylık (Aralık-Mayıs) periyodik görüşme takvimini bir kez doldurun. Sistem bu verileri tüm öğrencilerin bireysel formlarına entegre edecektir. <b>"Detay"</b> butonu ile öğrencilere özel konu ve tarih girebilirsiniz.</li>
                 <li><b>Excel'den Veri Aktarımı:</b> Sınav analizinde olduğu gibi E-Okul'dan Puan Çizelgesi (Sadece Veri) dosyasını indirin. 1. sıradan başlayarak <b>Proje notu sütununa kadar (A'dan en sağa kadar)</b> tüm öğrencileri kopyalayıp ilgili yeşil alana yapıştırın.</li>
                 <li><b>Çıktı Alma İşlemleri:</b> İhtiyacınıza göre iki farklı yazdırma seçeneği mevcuttur:
                     <ul>
@@ -317,6 +340,30 @@
 
 <div id="printArea" class="print-only"></div>
 
+<div id="projeDetayModal" class="modal-overlay no-print">
+    <div class="modal-content">
+        <span class="modal-close" onclick="p_projeDetayKapat()">&times;</span>
+        <h3 class="modal-title" id="modalOgrenciAd">Öğrenci Proje Detayları</h3>
+        <input type="hidden" id="modalOgrenciIndex">
+        
+        <div class="info-text">💡 Buraya girdiğiniz bilgiler <b>sadece bu öğrencinin</b> formuna basılır. Boş bıraktığınız kutular ise otomatik olarak ana ekrandaki <b>Genel Proje Bilgilerinden</b> kopyalanır.</div>
+
+        <div class="grid-2">
+            <div><label>Öğrenciye Özel Proje Konusu:</label><input type="text" id="m_projeKonusu" placeholder="Boş bırakılırsa genel konu kullanılır..."></div>
+            <div><label>Öğrenciye Özel Kaynaklar:</label><input type="text" id="m_kaynaklar" placeholder="Boş bırakılırsa genel kaynaklar kullanılır..."></div>
+        </div>
+        
+        <br><h4 style="color:#2980b9; margin-bottom: 10px;">📅 Öğrenciye Özel Süreç Takvimi</h4>
+        <div style="display:flex; flex-direction:column; gap:8px;" id="modalSurecAlanlari">
+            </div>
+        
+        <div class="grid-2" style="margin-top:20px;">
+            <button class="btn btn-danger" style="height:45px;" onclick="p_projeDetaySifirla()">🗑️ Bu Öğrencinin Özel Verilerini Sil (Genele Dön)</button>
+            <button class="btn btn-success" style="height:45px; margin-top:0;" onclick="p_projeDetayKaydet()">💾 Öğrenciye Özel Detayları Kaydet</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ==========================================
     // SEKMELER VE DİNAMİK CSS
@@ -325,7 +372,6 @@
     
     const cssPrintPerf = `@media print{@page{size:A4 landscape;margin:2mm!important}*{box-sizing:border-box!important}html,body{background:#fff;color:#000;margin:0!important;padding:0!important;width:100%;height:100%;overflow:hidden}.no-print,.container{display:none!important}.print-only{display:flex!important;flex-direction:column;justify-content:space-between;width:293mm;height:206mm;padding:4mm 6mm;overflow:hidden;page-break-inside:avoid;transform:scale(0.93);transform-origin:top center}.official-header{text-align:center;font-weight:bold;font-size:11pt;line-height:1.2;margin-bottom:8px;flex-shrink:0;color:#1a5276}table.print-table{width:100%;border-collapse:collapse;font-size:7.5pt;table-layout:fixed;margin-bottom:2px}table.print-table th,table.print-table td{border:1px solid #333!important;padding:0px 1px!important;color:#000;text-align:center;height:11px!important;line-height:11px!important}table.print-table th{background:#d4e6f1!important;-webkit-print-color-adjust:exact;font-weight:bold;vertical-align:bottom;color:#154360!important}table.print-table tbody tr:nth-child(even) td{background:#fbfcfc!important;-webkit-print-color-adjust:exact}.vertical-th-container{writing-mode:vertical-rl;transform:rotate(180deg);white-space:normal;word-wrap:break-word;height:90px;max-height:90px;width:100%;text-align:left;padding:2px;font-size:6.5pt;font-weight:normal;line-height:1.1;overflow:hidden;box-sizing:border-box}.col-sira{width:3%;font-weight:bold;font-size:7pt}.col-isim{width:22%;text-align:left!important;padding-left:4px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:bold;font-size:7.5pt}.col-kriter{width:7%}.col-toplam{width:5%;font-weight:bold;background:#e8f8f5!important;-webkit-print-color-adjust:exact;font-size:8pt;color:#0e6655!important}.bottom-area{width:100%;page-break-inside:avoid;margin-top:auto;padding-top:5px;flex-shrink:0}.signatures{display:flex;justify-content:space-between;text-align:center;font-size:9pt;margin-top:5px}.signature-box{width:40%;line-height:1.4;color:#2c3e50}.print-footer{text-align:right;font-size:6pt;color:#555;border-top:1px dotted #ccc;padding-top:3px;margin-top:4px;font-style:italic}}`;
     
-    // GÜNCELLENMİŞ ÖĞRENCİ BAZLI PROJE CSS (Sayfa taşması fixed)
     const cssPrintProje = `@media print{
         @page{size:A4 portrait; margin:10mm;}
         *{box-sizing:border-box!important;}
@@ -960,6 +1006,9 @@
     const p_olcutlerUyg=["Dersin gerektirdiği kılık kıyafet (eşofman, spor ayakkabı vb.) kurallarına uyar.","Isınma ve soğuma hareketlerini kurallarına uygun olarak yapar.","Branşa özgü temel teknik ve taktikleri doğru uygular.","Spor araç ve gereçlerini amacına uygun, dikkatli ve güvenli kullanır.","Oyun ve yarışma kurallarına riayet eder, yönergeleri doğru takip eder.","Motorik özelliklerini (kuvvet, dayanıklılık, hız, esneklik) etkin kullanır.","Takım çalışmalarında iş birliği yapar ve grup içi sorumluluklarını yerine getirir.","Sportmenlik (Fair-Play) anlayışına uygun davranışlar sergiler.","Kazanma ve kaybetme durumlarında saygılı davranır, duygularını kontrol eder.","Kişisel hijyen kurallarına ve spor alanı temizliğine dikkat eder."];
     const p_olcutlerProje=["Proje amacını, hedefini ve çalışma planını doğru belirler.","Projesi için geniş çaplı ve güvenilir literatür taraması yapar.","Elde ettiği verileri bilimsel yöntemlerle analiz edip düzenler.","Proje sürecinde karşılaştığı problemlere akılcı çözümler üretir.","Proje içeriğini bilimsel gerçeklere ve düzeyine uygun hazırlar.","Proje raporunu standartlara ve yazım kurallarına uygun yazar.","Projesinde yaratıcı, özgün ve uygulanabilir fikirler ortaya koyar.","Projeyi çalışma takvimine uygun yürütür ve zamanında teslim eder.","Proje sunumunda konuya hakimiyetini ve özgüvenini yansıtır.","Sunum sırasında sorulan sorulara tatmin edici cevaplar verir."];
     
+    // KÜRESEL DEĞİŞKEN (Özel proje verilerini tutmak için)
+    let p_ogrenciProjeDetaylari = {};
+
     function p_kriterleriGuncelle(){
         const val=document.getElementById('p_evrakTuru').value;
         const txt=document.getElementById('p_kriterlerInput');
@@ -968,16 +1017,21 @@
         else if(val.startsWith('u')) txt.value=p_olcutlerUyg.join('\n');
         else if(val==='proje') txt.value=p_olcutlerProje.join('\n');
         
-        // Proje seçildiyse ek bilgileri göster, değilse gizle
+        // Proje seçildiyse ek bilgileri ve detay kolonunu göster, değilse gizle
         const ekBilgiler = document.getElementById('p_ekBilgilerAlani');
+        const colDetay = document.querySelectorAll('.col-proje-detay'); 
+        
         if(val === 'proje') {
             ekBilgiler.style.display = 'block';
+            colDetay.forEach(el => el.style.display = 'table-cell');
         } else {
             ekBilgiler.style.display = 'none';
+            colDetay.forEach(el => el.style.display = 'none');
         }
     }
     const p_kolonlar=['okulNo','isim','s1','s2','s3','s4','s5','s6','p1','p2','p3','u1','u2','u3','proje'];
     const p_hedef=['p1','p2','p3','u1','u2','u3','proje'];
+    
     document.addEventListener("DOMContentLoaded",function(){
         switchTab('analiz'); p_kriterleriGuncelle();
         const tbody=document.getElementById('p_gridBody'); tbody.innerHTML='';
@@ -991,12 +1045,26 @@
                 td.innerHTML=`<input type="text" id="p_${col}_${i}">`;
                 tr.appendChild(td);
             });
+            
+            // YENİ: Proje Detay Kolonu Butonu
+            let tdDetay = document.createElement('td');
+            tdDetay.className = 'col-proje-detay';
+            tdDetay.style.display = 'none';
+            tdDetay.innerHTML = `<button class="btn btn-warning" style="padding:4px 0; font-size:11px; width:100%; height:100%; font-weight:bold; cursor:pointer; background-color:#ecf0f1; border:1px solid #bdc3c7; color:#333;" onclick="p_projeDetayAc(${i})" id="btn_detay_${i}">✏️ Detay</button>`;
+            tr.appendChild(tdDetay);
+
             let tdSil=document.createElement('td'); tdSil.style.textAlign='center';
             tdSil.innerHTML=`<button class="btn-clear" onclick="p_satirTemizle(${i})">X</button>`;
             tr.appendChild(tdSil); tbody.appendChild(tr);
         }
     });
-    function p_satirTemizle(index){p_kolonlar.forEach(col=>{document.getElementById(`p_${col}_${index}`).value="";});}
+
+    function p_satirTemizle(index){
+        p_kolonlar.forEach(col=>{document.getElementById(`p_${col}_${index}`).value="";});
+        delete p_ogrenciProjeDetaylari[index];
+        let btn = document.getElementById(`btn_detay_${index}`);
+        if(btn) { btn.style.backgroundColor = ''; btn.innerText = "✏️ Detay"; btn.style.color=''; }
+    }
     
     function p_excelVerileriniAktar(){
         let raw=document.getElementById('p_rawEokulData').value.trim();
@@ -1014,6 +1082,9 @@
             }
         });
         if(students.length===0){alert("Öğrenci bulunamadı."); return;}
+        
+        p_ogrenciProjeDetaylari = {}; // Yeni aktarımda eski detayları sıfırla
+
         for(let i=0;i<MAX_OGRENCI;i++) p_satirTemizle(i);
         students.forEach((s,idx)=>{
             if(idx>=MAX_OGRENCI)return;
@@ -1026,6 +1097,70 @@
         alert(students.length + " öğrenci aktarıldı.");
     }
     
+    // YENİ: Proje Detay Modal Fonksiyonları
+    function p_projeDetayAc(index) {
+        let isim = document.getElementById(`p_isim_${index}`).value.trim();
+        if(!isim) { alert("Önce bu satıra öğrenci eklemelisiniz!"); return; }
+        
+        document.getElementById('modalOgrenciAd').innerText = isim + " - Proje Detayları";
+        document.getElementById('modalOgrenciIndex').value = index;
+        
+        let detay = p_ogrenciProjeDetaylari[index] || {};
+        
+        document.getElementById('m_projeKonusu').value = detay.konu || "";
+        document.getElementById('m_kaynaklar').value = detay.kaynaklar || "";
+        
+        let surecHTML = '';
+        for(let m=1; m<=6; m++) {
+            let tVal = detay[`tarih_${m}`] || "";
+            let kVal = detay[`konu_${m}`] || "";
+            let genT = document.getElementById(`p_tarih_${m}`).value;
+            let genK = document.getElementById(`p_konu_${m}`).value;
+
+            surecHTML += `<div style="display:flex; gap:10px;">
+                <input type="text" id="m_tarih_${m}" value="${tVal}" placeholder="${genT}" style="flex:1; text-align:center;">
+                <input type="text" id="m_konu_${m}" value="${kVal}" placeholder="${genK}" style="flex:4;">
+            </div>`;
+        }
+        document.getElementById('modalSurecAlanlari').innerHTML = surecHTML;
+        document.getElementById('projeDetayModal').style.display = 'flex';
+    }
+
+    function p_projeDetayKapat() { document.getElementById('projeDetayModal').style.display = 'none'; }
+
+    function p_projeDetayKaydet() {
+        let index = document.getElementById('modalOgrenciIndex').value;
+        let konu = document.getElementById('m_projeKonusu').value.trim();
+        let kaynaklar = document.getElementById('m_kaynaklar').value.trim();
+        let detay = { konu: konu, kaynaklar: kaynaklar };
+        let hasCustomData = (konu !== "" || kaynaklar !== "");
+
+        for(let m=1; m<=6; m++) {
+            let t = document.getElementById(`m_tarih_${m}`).value.trim();
+            let k = document.getElementById(`m_konu_${m}`).value.trim();
+            detay[`tarih_${m}`] = t; detay[`konu_${m}`] = k;
+            if(t !== "" || k !== "") hasCustomData = true;
+        }
+
+        let btn = document.getElementById(`btn_detay_${index}`);
+        if(hasCustomData) {
+            p_ogrenciProjeDetaylari[index] = detay;
+            if(btn) { btn.style.backgroundColor = '#27ae60'; btn.innerText = "✅ Özel"; btn.style.color = 'white'; }
+        } else {
+            delete p_ogrenciProjeDetaylari[index];
+            if(btn) { btn.style.backgroundColor = '#ecf0f1'; btn.innerText = "✏️ Detay"; btn.style.color = '#333'; }
+        }
+        p_projeDetayKapat();
+    }
+
+    function p_projeDetaySifirla() {
+        let index = document.getElementById('modalOgrenciIndex').value;
+        delete p_ogrenciProjeDetaylari[index];
+        let btn = document.getElementById(`btn_detay_${index}`);
+        if(btn) { btn.style.backgroundColor = '#ecf0f1'; btn.innerText = "✏️ Detay"; btn.style.color = '#333'; }
+        p_projeDetayKapat();
+    }
+
     function p_dagitPuani(hedef){
         let pStr=String(hedef).trim().toUpperCase();
         if(['G','M','K','MUAF'].includes(pStr)) return new Array(10).fill("—");
@@ -1162,6 +1297,11 @@
 
             if(isim !== "" && hedef !== "") {
                 aktifOgrenciSayisi++;
+                
+                let ozelDetay = p_ogrenciProjeDetaylari[i] || {};
+                let basilanKonu = ozelDetay.konu ? ozelDetay.konu : pKonu;
+                let basilanKaynaklar = ozelDetay.kaynaklar ? ozelDetay.kaynaklar : pKaynaklar;
+
                 let pStr = hedef.toString().toUpperCase();
                 let notlar = p_dagitPuani(hedef);
                 
@@ -1185,7 +1325,6 @@
                     notGeriBildirimi = toplam + " Puan";
                 }
 
-                // 10 Kriter Satırını ve Dinamik Düşünceler Sütununu Doldurma
                 let criteriaRows = '';
                 for(let k=0; k<10; k++) {
                     let p = notlar[k];
@@ -1198,12 +1337,11 @@
                     </tr>`;
                 }
 
-                // 6 Aylık Görüşme Verilerini Sistemden Çekme
                 let surecRows = '';
                 for(let m=1; m<=6; m++) {
-                    let tVal = document.getElementById(`p_tarih_${m}`).value.trim();
-                    let kVal = document.getElementById(`p_konu_${m}`).value.trim();
-                    // Öğrenci ödevi getirmediyse süreç kısmına da not düşülebilir veya aynen kalır
+                    let tVal = ozelDetay[`tarih_${m}`] ? ozelDetay[`tarih_${m}`] : document.getElementById(`p_tarih_${m}`).value.trim();
+                    let kVal = ozelDetay[`konu_${m}`] ? ozelDetay[`konu_${m}`] : document.getElementById(`p_konu_${m}`).value.trim();
+                    
                     if(pStr === 'G') {
                         surecRows += `<tr><td class="text-center" style="padding:2px;">${tVal}</td><td style="color:#555; padding:2px;">${kVal} (Ödev teslim edilmedi)</td></tr>`;
                     } else {
@@ -1241,8 +1379,8 @@
                     <table class="info-table" style="width:100%; border-collapse:collapse;">
                         <tr><td style="width:25%; border:1px solid #000; padding:3px;"><b>Proje Teslim Tarihi</b></td><td style="border:1px solid #000; padding:3px;">: ...../...../2026</td></tr>
                         <tr><td style="border:1px solid #000; padding:3px;"><b>Ders</b></td><td style="border:1px solid #000; padding:3px;">: ${ders}</td></tr>
-                        <tr><td style="border:1px solid #000; padding:3px;"><b>Proje Konusu</b></td><td style="border:1px solid #000; padding:3px;">: ${pKonu}</td></tr>
-                        <tr><td style="border:1px solid #000; padding:3px;"><b>Kullanılan Kaynaklar</b></td><td style="border:1px solid #000; padding:3px;">: ${pKaynaklar}</td></tr>
+                        <tr><td style="border:1px solid #000; padding:3px;"><b>Proje Konusu</b></td><td style="border:1px solid #000; padding:3px;">: ${basilanKonu}</td></tr>
+                        <tr><td style="border:1px solid #000; padding:3px;"><b>Kullanılan Kaynaklar</b></td><td style="border:1px solid #000; padding:3px;">: ${basilanKaynaklar}</td></tr>
                         <tr><td style="border:1px solid #000; padding:3px;"><b>Değerlendirme Sonucu</b></td><td style="border:1px solid #000; padding:3px;">: <b style="font-size:10.5pt;">${notGeriBildirimi}</b></td></tr>
                     </table>
 
