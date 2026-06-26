@@ -340,6 +340,7 @@
 
 <div id="printArea" class="print-only"></div>
 
+<!-- ÖĞRENCİ PROJE DETAY MODALI -->
 <div id="projeDetayModal" class="modal-overlay no-print">
     <div class="modal-content">
         <span class="modal-close" onclick="p_projeDetayKapat()">&times;</span>
@@ -355,7 +356,8 @@
         
         <br><h4 style="color:#2980b9; margin-bottom: 10px;">📅 Öğrenciye Özel Süreç Takvimi</h4>
         <div style="display:flex; flex-direction:column; gap:8px;" id="modalSurecAlanlari">
-            </div>
+            <!-- JS ile 6 satır buraya eklenecek -->
+        </div>
         
         <div class="grid-2" style="margin-top:20px;">
             <button class="btn btn-danger" style="height:45px;" onclick="p_projeDetaySifirla()">🗑️ Bu Öğrencinin Özel Verilerini Sil (Genele Dön)</button>
@@ -1186,7 +1188,7 @@
         
         let hasData=false, aktif=0;
         for(let i=0;i<MAX_OGRENCI;i++){let isim=document.getElementById(`p_isim_${i}`); let not=document.getElementById(`p_${seciliSutun}_${i}`); if(isim && isim.value.trim()!==""){aktif++; if(not && not.value.trim()!=="") hasData=true;}}
-        if(aktif>0 && !hasData){if(!confirm("Sütunda not yok, rastgele dağıtılsın mı?"))return;}
+        if(aktif>0 && !hasData){if(!confirm("Sütunda hiç not bulunamadı. Tümü 'G' (Girmedi) olarak değerlendirilecek. Onaylıyor musunuz?"))return;}
         let kriterler=document.getElementById('p_kriterlerInput').value.split('\n').filter(l=>l.trim()!=='');
         for(let i=0;i<10;i++) if(!kriterler[i]) kriterler[i]=`Ölçüt ${i+1}`;
         let ogrTab='', sayac=0;
@@ -1196,11 +1198,15 @@
             let hedef=document.getElementById(`p_${seciliSutun}_${i}`).value.trim();
             if(isim!==""){
                 sayac++;
-                let pStr = hedef.toString().toUpperCase();
-                if(hedef==="" || (isNaN(parseInt(hedef)) && !['G','M','K','MUAF'].includes(pStr))) {
-                    hedef=Math.floor(Math.random()*31)+70;
-                    pStr = hedef.toString();
+                if(hedef === "") {
+                    hedef = "G";
                 }
+                let pStr = hedef.toString().toUpperCase();
+                if(isNaN(parseInt(hedef)) && !['G','M','K','MUAF'].includes(pStr)) {
+                    hedef = "G";
+                    pStr = "G";
+                }
+
                 let notlar=p_dagitPuani(hedef);
                 let hucre='', toplam=0;
                 notlar.forEach(n=>{hucre+=`<td>${n}</td>`; if(n!=="" && n!=="—" && !isNaN(n)) toplam+=parseInt(n);});
@@ -1295,14 +1301,22 @@
             let isim=document.getElementById(`p_isim_${i}`).value.trim();
             let hedef=document.getElementById(`p_${seciliSutun}_${i}`).value.trim();
 
-            if(isim !== "" && hedef !== "") {
+            if(isim !== "") {
+                if(hedef === "") {
+                    hedef = "G";
+                }
+                let pStr = hedef.toString().toUpperCase();
+                if(isNaN(parseInt(hedef)) && !['G','M','K','MUAF'].includes(pStr)) {
+                    hedef = "G";
+                    pStr = "G";
+                }
+
                 aktifOgrenciSayisi++;
                 
                 let ozelDetay = p_ogrenciProjeDetaylari[i] || {};
                 let basilanKonu = ozelDetay.konu ? ozelDetay.konu : pKonu;
                 let basilanKaynaklar = ozelDetay.kaynaklar ? ozelDetay.kaynaklar : pKaynaklar;
 
-                let pStr = hedef.toString().toUpperCase();
                 let notlar = p_dagitPuani(hedef);
                 
                 let toplam = 0;
