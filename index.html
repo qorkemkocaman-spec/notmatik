@@ -1196,28 +1196,39 @@
             let okulNo=document.getElementById(`p_okulNo_${i}`).value.trim();
             let isim=document.getElementById(`p_isim_${i}`).value.trim();
             let hedef=document.getElementById(`p_${seciliSutun}_${i}`).value.trim();
+            
             if(isim!==""){
                 sayac++;
-                if(hedef === "") {
-                    hedef = "G";
-                }
-                let pStr = hedef.toString().toUpperCase();
-                if(isNaN(parseInt(hedef)) && !['G','M','K','MUAF'].includes(pStr)) {
-                    hedef = "G";
-                    pStr = "G";
-                }
-
-                let notlar=p_dagitPuani(hedef);
-                let hucre='', toplam=0;
-                notlar.forEach(n=>{hucre+=`<td>${n}</td>`; if(n!=="" && n!=="—" && !isNaN(n)) toplam+=parseInt(n);});
                 
-                let gosterilen = '';
-                if(['G','M','K','MUAF'].includes(pStr)){
-                    gosterilen = `<span style="color:#c0392b; font-weight:bold;">${pStr}</span>`;
-                } else if(['0','0.00'].includes(pStr)){
-                    gosterilen = 0;
+                // Performans ve Uygulamada boş bırakılanları G kabul et, Projede boş bırakılanları elleme.
+                if(seciliSutun !== 'proje' && hedef === "") {
+                    hedef = "G";
+                }
+                
+                let hucre='', gosterilen='';
+                
+                // Eğer Proje sekmesi için boş bırakılmışsa hücreler boş basılır
+                if(hedef === "") {
+                    for(let j=0;j<10;j++) hucre+=`<td></td>`;
+                    gosterilen = '';
                 } else {
-                    gosterilen = toplam;
+                    let pStr = hedef.toString().toUpperCase();
+                    if(isNaN(parseInt(hedef)) && !['G','M','K','MUAF'].includes(pStr)) {
+                        hedef = "G";
+                        pStr = "G";
+                    }
+
+                    let notlar=p_dagitPuani(hedef);
+                    let toplam=0;
+                    notlar.forEach(n=>{hucre+=`<td>${n}</td>`; if(n!=="" && n!=="—" && !isNaN(n)) toplam+=parseInt(n);});
+                    
+                    if(['G','M','K','MUAF'].includes(pStr)){
+                        gosterilen = `<span style="color:#c0392b; font-weight:bold;">${pStr}</span>`;
+                    } else if(['0','0.00'].includes(pStr)){
+                        gosterilen = 0;
+                    } else {
+                        gosterilen = toplam;
+                    }
                 }
                 
                 ogrTab+=`<tr><td class="col-sira">${sayac}</td><td class="col-okulno">${okulNo}</td><td class="col-isim limit-name">${isim}</td>${hucre}<td class="col-toplam">${gosterilen}</td></tr>`;
@@ -1301,17 +1312,16 @@
             let isim=document.getElementById(`p_isim_${i}`).value.trim();
             let hedef=document.getElementById(`p_${seciliSutun}_${i}`).value.trim();
 
-            if(isim !== "") {
-                if(hedef === "") {
-                    hedef = "G";
-                }
+            // ÖĞRENCİNİN İSMİ VARSA VE NOTU BOŞ DEĞİLSE FORM BAS!
+            if(isim !== "" && hedef !== "") {
+                
+                aktifOgrenciSayisi++;
+                
                 let pStr = hedef.toString().toUpperCase();
                 if(isNaN(parseInt(hedef)) && !['G','M','K','MUAF'].includes(pStr)) {
                     hedef = "G";
                     pStr = "G";
                 }
-
-                aktifOgrenciSayisi++;
                 
                 let ozelDetay = p_ogrenciProjeDetaylari[i] || {};
                 let basilanKonu = ozelDetay.konu ? ozelDetay.konu : pKonu;
