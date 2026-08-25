@@ -10,10 +10,11 @@
   "scripts": {
     "dev": "vercel dev",
     "seed": "node scripts/seed-from-csv.js",
-    "sync:meb": "node scripts/sync-meb.js"
+    "sync:meb": "node scripts/sync-meb.js",
+    "collect:meb": "node scripts/collect-meb.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
-  },
-  "devDependencies": {}
+    "@supabase/supabase-js": "^2.45.0",
+    "pdfjs-dist": "^3.11.174"
+  }
 }

@@ -52,10 +52,40 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...service...role...
 
 ---
 
-## MEB senkronizasyonu (otomatik, opsiyonel)
-MEB (`mufredat.meb.gov.tr`) kazanımları API'yle değil, **ders PDF'leri içinde** sunar.
-- `scripts/sync-meb.js` (taslak): Tüm ders programlarını + PDF adreslerini `data/meb_programlar.json`'a toplar. `node scripts/sync-meb.js`
-- Ünite/konu/kazanım tablo çözücü + Vercel Cron ile yıllık otomatik `upsert` sonraki adımdır.
+## MEB kazanım senkronizasyonu (otomatik)
+
+MEB (`mufredat.meb.gov.tr`) kazanımları API'yle değil, **ders PDF'leri içinde** sunar. Proje iki dosya ile bunu tam otomatik hale getirir:
+
+| Dosya | İşi |
+|---|---|
+| `scripts/sync-meb.js` | Programlar sayfasını tarar → tüm derslerin PDF adreslerini `data/meb_programlar.json`'a toplar |
+| `scripts/collect-meb.js` | Her PDF'i indirip içindeki **öğrenme çıktılarını** (TYMM formatı) çözer ve **Supabase'e yazar** (upsert) |
+| `.github/workflows/meb-sync.yml` | GitHub Actions: **her ayın 1'inde otomatik** yukarıdaki iki script'i çalıştırır |
+
+### Nasıl çalışır (elle) teste
+```bash
+npm install
+node scripts/sync-meb.js        # envanter güncelle
+node scripts/collect-meb.js --ders MANTIK   # sadece Mantık (test)
+node scripts/collect-meb.js     # TÜM dersler
+```
+
+### Otomatik (senede 1 / ayda 1 güncelleme)
+MEB'in PDF'lerini indirip parse etmek 535 ders için uzun sürer ve **Vercel'in 60sn timeout'una sığmaz**. Bu yüzden asıl otomasyon **GitHub Actions** ile yapılır (bedava, bir saate kadar çalışabilir):
+
+1. GitHub'da repo → **Settings → Secrets and variables → Actions → New repository secret**:
+   - `SUPABASE_URL` = `https://xxxx.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` = gizli anahtar
+2. Workflow (`meb-sync.yml`) **her ayın 1'i saat 04:00 TR** otomatik çalışır (cron `0 1 1 * *`).
+   - "Senede 1" yeterliyse `meb-sync.yml` içindeki `cron` satırını `0 3 1 9 *` (her yıl 1 Eylül) yapabilirsin.
+3. İstersen **Actions sekmesinden "Run workflow"** butonuna basarak elle de tetikleyebilirsin.
+
+> **Not:** Yeni MEB-TYMM (2026) formatı mükemmel çözülür; eski/geçiş dönemi formatlar (`I, II ve III. Kademeler`, klasik lise) farklı yapıda olduğundan bazı derslerde öğrenme çıktısı bulunamayabilir. Bu sınır bilinerek kullanılmalıdır.
+
+### Vercel tarafı (opsiyonel, manuel)
+- `api/cron-sync.js` yalnızca **hızlı deneme** içindir (3 dersle sınırlı). Tam senkronu GitHub Actions yapar.
+- İstersen Vercel'de `CALLER_TOKEN` env'i ekleyip `POST /api/cron-sync` ile elle çağırabilirsin.
+
 
 ## Yerel geliştirme
 ```
