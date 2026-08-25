@@ -9,10 +9,10 @@
 #   Bu workflow uzun çalışabilir (6 saate kadar) ve bedelsizdir.
 #
 # Ne zaman?
-#   Varsayılan: her ayın 1'inde saat 03:00 (TR) — yani yılda 12 kez.
+#   Varsayılan: HER YIL 1 EKİM saat 04:00 (TR) — yani yılda 1 kez.
 #   MEB genelde öğretim programlarını yaz aylarında yayımlar;
-#   "senede 1" yeterliyse eğitim yılı başına (Eylül) denk gelmesi
-#   için cron'u düzenleyebilirsin.
+#   Ekim başı güncel öğretim yılıyla eşleşmesi için idealdir.
+#   Cron: "0 1 1 10 *" (1 Ekim, 01:00 UTC = 04:00 TR)
 #
 # Kurulum:
 #   Repo -> Settings -> Secrets and variables -> Actions -> New secret
@@ -22,8 +22,10 @@
 name: MEB Kazanım Senkronu
 on:
   schedule:
-    # Cron (UTC): "0 1 1 * *" = her ayın 1'i, 01:00 UTC = 04:00 TR
-    - cron: "0 1 1 * *"
+    # Cron (UTC): "0 1 1 10 *" = HER YIL 1 EKİM, 01:00 UTC = 04:00 TR
+    # MEB yeni öğretim yılı programlarını genelde yaz aylarında günceller;
+    # Ekim başı güncel sürümle eşleşmesi için idealdir.
+    - cron: "0 1 1 10 *"
   workflow_dispatch: {}   # Manuel "Run workflow" butonu da mevcut
 
 jobs:
