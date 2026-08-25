@@ -7,3 +7,5 @@ node_modules/
 # MEB test artıkları (indirilen PDF/geçici metinler)
 data/*.pdf
 data/*_metin.txt
+.vercel
+.env*

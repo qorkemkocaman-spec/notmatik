@@ -83,8 +83,8 @@ MEB'in PDF'lerini indirip parse etmek 535 ders için uzun sürer ve **Vercel'in 
 > **Not:** Yeni MEB-TYMM (2026) formatı mükemmel çözülür; eski/geçiş dönemi formatlar (`I, II ve III. Kademeler`, klasik lise) farklı yapıda olduğundan bazı derslerde öğrenme çıktısı bulunamayabilir. Bu sınır bilinerek kullanılmalıdır.
 
 ### Vercel tarafı (opsiyonel, manuel)
-- `api/cron-sync.js` yalnızca **hızlı deneme** içindir (3 dersle sınırlı). Tam senkronu GitHub Actions yapar.
-- İstersen Vercel'de `CALLER_TOKEN` env'i ekleyip `POST /api/cron-sync` ile elle çağırabilirsin.
+- `api/kazanimlar.js` ön uca veri sağlar (asıl işlev).
+- Asıl MEB otomasyonu GitHub Actions'ta çalışır; Vercel'de `api/` yalnızca veri okuma içindir, böylece build hızlı ve stabil kalır.
 
 
 ## Yerel geliştirme
