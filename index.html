@@ -440,89 +440,75 @@
     // Kazanımlar artık tarayıcıya ham TSV indirilmez;
     // sunucu tarafı /api/kazanimlar Supabase'den okur.
     const KAZANIM_API = "/api/kazanimlar";
-    let kazanimVeritabani = [];
-    // Hızlı filtreleme için indeksler (binlerce kaydı her filtrede tekrar taramayız)
-    let kzIndex = { kategoriSet: new Set(), dersMap: new Map(), kazanimMap: new Map() };
-    function kzKurIndeks(){
-        const is=new Set(), dm=new Map(), km=new Map();
-        for(const item of kazanimVeritabani){
-            const anahtarK=item.kademe+"||"+item.kategori;
-            const anahtarD=item.kademe+"||"+item.kategori+"||"+item.ders;
-            if(item.kategori) is.add(item.kategori);
-            if(!dm.has(anahtarK)) dm.set(anahtarK, new Set());
-            dm.get(anahtarK).add(item.ders);
-            if(!km.has(anahtarD)) km.set(anahtarD, []);
-            km.get(anahtarD).push({kazanim:item.kazanim, puan:item.puan});
-        }
-        kzIndex={kategoriSet:is, dersMap:dm, kazanimMap:km};
+    // Sunucu-taraflı filtreleme: tarayıcıya tüm veritabanı inmez, seçime göre dar veri gelir.
+    const kzCache = new Map();
+    async function kzCek(filtre){
+        const qs=Object.keys(filtre).filter(k=>filtre[k]).map(k=>k+"="+encodeURIComponent(filtre[k])).join("&");
+        const key=qs||"all";
+        if(kzCache.has(key)) return kzCache.get(key);
+        const res=await fetch(KAZANIM_API+(qs?"?"+qs:""),{method:'GET',cache:'no-store'});
+        if(!res.ok)throw new Error("HTTP "+res.status);
+        const json=await res.json();
+        const kayitlar=(Array.isArray(json)?json:(json&&json.data))||[];
+        kzCache.set(key,kayitlar);
+        return kayitlar;
     }
     async function veritabaniniYukle(){
         const btn=document.getElementById('btn-veritabani');
         btn.innerText="⏳ Yükleniyor..."; btn.disabled=true;
         try{
-            const res=await fetch(KAZANIM_API,{method:'GET',cache:'no-store'});
-            if(!res.ok)throw new Error(`HTTP ${res.status}`);
-            const json=await res.json();
-            const kayitlar = Array.isArray(json) ? json : (json && json.data) || [];
-            if(!Array.isArray(kayitlar)||kayitlar.length===0)throw new Error("Veri bulunamadı. Supabase bağlantısını kontrol edin.");
-            kazanimVeritabani=[];
-            kayitlar.forEach(item=>{
-                const kademe=(item.kademe||item.sinif||"").trim(), kategori=(item.kategori||"").trim(), ders=(item.ders||"").trim(), kazanim=(item.kazanim||"").trim();
-                if(kademe===""||kazanim==="")return;
-                const puan=(item.puan_varsayilan!=null)?String(item.puan_varsayilan):"10";
-                kazanimVeritabani.push({kademe,kategori,ders,kazanim,puan});
-            });
-            if(kazanimVeritabani.length===0)throw new Error("Veri bulunamadı.");
-            kzKurIndeks();
-            // Kademe dropdown sabit 7 seçenek
+            // Kademe dropdown sabit 7 seçenek; veri yalnızca kademe seçilince çekilir.
             const kademeler=["İlkokul","Ortaokul","İHO","Lise","Spor Lisesi","Güzel Sanatlar Lisesi","Meslek Lisesi"];
             const sec=document.getElementById('a_sinifSeviyesi');
             sec.innerHTML='<option value="">Seçiniz...</option>';
-            kademeler.forEach(k=>sec.innerHTML+=`<option value="${k}">${k}</option>`);
+            for(const k of kademeler){ const o=document.createElement('option'); o.value=k; o.textContent=k; sec.appendChild(o); }
             document.getElementById('filtre-alani').style.display='flex';
             btn.style.display='none';
         }catch(e){ alert(`❌ BAĞLANTI HATASI:\n\n${e.message}`); btn.innerText="🔄 Yeniden Dene"; btn.disabled=false; }
     }
-    function filtreleKategori(){
+    async function filtreleKategori(){
         const kademe=document.getElementById('a_sinifSeviyesi').value;
         const secK=document.getElementById('a_dersTuru'), secD=document.getElementById('a_dersAdiFiltre'), secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
-        secD.innerHTML='<option value="">Seçiniz...</option>'; secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>';
+        secD.innerHTML=''; secKaz.innerHTML='';
         secK.disabled=secD.disabled=secKaz.disabled=true; ip.disabled=btn.disabled=true; ip.value="";
         secK.innerHTML='<option value="">Seçiniz...</option>';
         if(!kademe)return;
-        // Kategori: veride bu kademede hangi kategoriler varsa listele (Ortak/Seçmeli)
-        let set=new Set(); kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori!=="")set.add(item.kategori);});
-        if(set.size===0)set.add("Ortak Ders");
-        Array.from(set).sort().forEach(k=>secK.innerHTML+=`<option value="${k}">${k}</option>`);
-        secK.disabled=false;
+        try{
+            const veri=await kzCek({kademe});
+            const set=new Set(); veri.forEach(r=>{ if(r.kategori) set.add(r.kategori); });
+            if(set.size===0) set.add("Ortak Ders");
+            const frag=document.createDocumentFragment();
+            const bos=document.createElement('option'); bos.value=""; bos.textContent="Seçiniz..."; frag.appendChild(bos);
+            Array.from(set).sort().forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; frag.appendChild(o); });
+            secK.innerHTML=''; secK.appendChild(frag); secK.disabled=false;
+        }catch(e){ alert("Hata: "+e.message); }
     }
-    function filtreleDersler(){
+    async function filtreleDersler(){
         const kademe=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value;
         const secD=document.getElementById('a_dersAdiFiltre'), secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
-        secD.innerHTML='<option value="">Seçiniz...</option>'; secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>';
-        secD.disabled=secKaz.disabled=true; ip.disabled=btn.disabled=true; ip.value="";
+        secD.innerHTML=''; secKaz.innerHTML=''; secD.disabled=secKaz.disabled=true; ip.disabled=btn.disabled=true; ip.value="";
+        secD.innerHTML='<option value="">Seçiniz...</option>';
         if(!kategori)return;
-        const anahtarK=kademe+"||"+kategori;
-        let dersler=Array.from(kzIndex.dersMap.get(anahtarK) || []);
-        if(dersler.length===0){ kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders!=="")dersler.push(item.ders);}); dersler=[...new Set(dersler)]; }
-        const secilmis=document.getElementById('a_dersAdiFiltre');
-        secilmis.innerHTML='<option value="">Seçiniz...</option>'+dersler.sort().map(d=>`<option value="${d}">${d}</option>`).join('');
-        secilmis.disabled=false;
+        try{
+            const veri=await kzCek({kademe, kategori});
+            let set=new Set(); veri.forEach(v=>{ if(v.ders) set.add(v.ders); });
+            let options='<option value="">Seçiniz...</option>';
+            Array.from(set).sort().forEach(d=>{ options+=`<option value="${d}">${d}</option>`; });
+            secD.innerHTML=options; secD.disabled=false;
+        }catch(e){ alert("Hata: "+e.message); }
     }
-    function filtreleKazanimlar(){
+    async function filtreleKazanimlar(){
         const kademe=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value, ders=document.getElementById('a_dersAdiFiltre').value;
         const secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
-        secKaz.innerHTML='<option value="">Kazanım Seçiniz...</option>'; ip.value=""; ip.disabled=btn.disabled=true;
-        if(!ders){secKaz.disabled=true; return;}
-        const anahtarD=kademe+"||"+kategori+"||"+ders;
-        let liste=kzIndex.kazanimMap.get(anahtarD) || [];
-        if(liste.length===0){ kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders===ders)liste.push({kazanim:item.kazanim,puan:item.puan});}); }
-        // Tek seferde innerHTML kurulumu (her eleman için ayrı DOM/string ekleme yerine)
-        const frag=document.createDocumentFragment();
-        const bos=document.createElement('option'); bos.value=""; bos.textContent="Kazanım Seçiniz..."; frag.appendChild(bos);
-        liste.forEach(k=>{ const o=document.createElement('option'); o.value=k.kazanim; o.setAttribute('data-puan',k.puan); o.textContent=k.kazanim; frag.appendChild(o); });
-        secKaz.innerHTML=''; secKaz.appendChild(frag);
-        secKaz.disabled=false;
+        secKaz.innerHTML=''; ip.value=""; ip.disabled=btn.disabled=true;
+        if(!ders){ secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>'; secKaz.disabled=true; return; }
+        try{
+            const veri=await kzCek({kademe, kategori, ders});
+            const frag=document.createDocumentFragment();
+            const bos=document.createElement('option'); bos.value=""; bos.textContent="Kazanım Seçiniz..."; frag.appendChild(bos);
+            veri.forEach(v=>{ const o=document.createElement('option'); o.value=v.kazanim; o.setAttribute('data-puan',(v.puan_varsayilan!=null)?String(v.puan_varsayilan):"10"); o.textContent=v.kazanim; frag.appendChild(o); });
+            secKaz.innerHTML=''; secKaz.appendChild(frag); secKaz.disabled=false;
+        }catch(e){ alert("Hata: "+e.message); }
     }
     function puanDoldur(){
         const sec=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');

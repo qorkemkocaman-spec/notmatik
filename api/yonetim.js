@@ -106,10 +106,26 @@ export default async function handler(req, res) {
   try {
     // ---------------- LISTELE ----------------
     if (method === "GET") {
-      const { kademe, kategori, ders, unite } = req.query;
+      const { kademe, kategori, ders, unite, limit, offset } = req.query;
       const data = await tumuGetir(supabase, { kademe, kategori, ders, unite });
       const sirali = data.slice().sort(kazanimSira);
-      return res.status(200).json({ data: sirali.map((r) => ({ ...r, kademe: r.sinif })) });
+      const toplam = sirali.length;
+
+      // Sayfalama: tarayıcıya yalnızca bir sayfa iner.
+      let sayfa = sirali;
+      let hasPaging = false;
+      if (limit !== undefined) {
+        hasPaging = true;
+        const lim = parseInt(limit, 10) || 50;
+        const off = parseInt(offset, 10) || 0;
+        sayfa = sirali.slice(off, off + lim);
+      }
+      const payload = { data: sayfa.map((r) => ({ ...r, kademe: r.sinif })), toplam };
+      if (hasPaging) {
+        payload.limit = parseInt(limit, 10) || 50;
+        payload.offset = parseInt(offset, 10) || 0;
+      }
+      return res.status(200).json(payload);
     }
 
     // ----------- JSON gövde hazırlama -----------
