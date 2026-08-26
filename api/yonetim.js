@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   try {
     // ---------------- LISTELE ----------------
     if (method === "GET") {
-      const { kademe, kategori, ders } = req.query;
+      const { kademe, kategori, ders, unite } = req.query;
       let q = supabase
         .from("kazanimlar")
         .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url")
@@ -36,6 +36,7 @@ export default async function handler(req, res) {
       if (kademe) q = q.eq("sinif", kademe);
       if (kategori) q = q.eq("kategori", kategori);
       if (ders) q = q.eq("ders", ders);
+      if (unite) q = q.eq("unite", unite);
       const { data, error } = await q;
       if (error) throw new Error(error.message);
       return res.status(200).json({ data: (data || []).map((r) => ({ ...r, kademe: r.sinif })) });
@@ -82,10 +83,28 @@ export default async function handler(req, res) {
     // ---------------- SİL ----------------
     if (method === "DELETE") {
       const id = req.query.id || (body && body.id);
-      if (!id) return res.status(400).json({ error: "id gerekli." });
-      const { error } = await supabase.from("kazanimlar").delete().eq("id", id);
+      let q = supabase.from("kazanimlar").delete();
+
+      if (id) {
+        // Tekli silme
+        q = q.eq("id", id);
+      } else {
+        // Toplu silme: filtreler query'den gelir
+        const { kademe, kategori, ders, unite } = req.query;
+        if (ders) q = q.eq("ders", ders);
+        if (kademe) q = q.eq("sinif", kademe);
+        if (kategori) q = q.eq("kategori", kategori);
+        if (unite) q = q.eq("unite", unite);
+
+        // Güvenlik: en az bir filtre zorunlu (tüm tabloyu silme riskine karşı)
+        if (!ders && !kademe && !kategori && !unite) {
+          return res.status(400).json({ error: "Silme için id veya en az bir filtre (ders, kademe, kategori, unite) gerekli." });
+        }
+      }
+
+      const { data, error } = await q.select("id");
       if (error) throw new Error(error.message);
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, silinen: (data || []).length });
     }
 
     res.setHeader("Allow", "GET,POST,PUT,DELETE");

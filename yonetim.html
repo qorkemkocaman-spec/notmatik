@@ -86,6 +86,21 @@
             <div id="yukle_durum"></div>
         </div>
 
+        <!-- TOPLU SİL -->
+        <div class="section" style="background:#fef5f5; border-color:#f2c8c8;">
+            <h3>🗑️ Toplu Kazanım Sil (Ders Bazında)</h3>
+            <p class="kucuk">Kademe, kategori, ders ve ünite filtrelerine uyan tüm kazanımları tek onayla siler. Ders adını tam girin (örn: Türk Dili ve Edebiyatı). Kalıcıdır, dikkatli kullanın.</p>
+            <div class="grid">
+                <div><label>Kademe</label><select id="s_kademe"></select></div>
+                <div><label>Kategori</label><select id="s_kategori"><option value="">Tümü</option><option value="Ortak Ders">Ortak Ders</option><option value="Seçmeli Ders">Seçmeli Ders</option></select></div>
+                <div><label>Ders (tam adı)</label><input type="text" id="s_ders" placeholder="Ör: Türk Dili ve Edebiyatı"></div>
+                <div><label>Ünite (boş = tümü)</label><input type="text" id="s_unite" placeholder="Örn: 1. Ünite"></div>
+            </div>
+            <button class="btn btn-gray" onclick="topluSilSay()">🔢 Kaç kayıt uyar?</button>
+            <button class="btn btn-red" onclick="topluSil()">🗑️ Filtreye Uyanları Sil</button>
+            <div id="toplusil_durum"></div>
+        </div>
+
         <!-- LİSTE -->
         <div class="section">
             <h3>📋 Kazanım Listesi <span id="sayac" class="kucuk"></span></h3>
@@ -118,6 +133,8 @@
         KADEMELER.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); });
         const fk=document.getElementById('f_kademe'); fk.innerHTML='<option value="">Tümü</option>';
         KADEMELER.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; fk.appendChild(o); });
+        const sk=document.getElementById('s_kademe'); sk.innerHTML='<option value="">Tümü</option>';
+        KADEMELER.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; sk.appendChild(o); });
     }
     function apiGet(p){ return fetch('/api/yonetim'+p,{headers:{'x-admin-key':admAnahtar()}}).then(r=>r.json()); }
     function apiSend(method,body,query){ return fetch('/api/yonetim'+ (query||'') ,{method,headers:{'Content-Type':'application/json','x-admin-key':admAnahtar()},body:JSON.stringify(body)}).then(r=>r.json()); }
@@ -164,6 +181,44 @@ function duzenle(id){
     function sil(id){
         if(!confirm('Bu kazanımı silmek istediğinize emin misiniz?')) return;
         apiSend('DELETE',{id}).then(j=>{ if(j.ok){ listele(); } else alert('Hata: '+(j.error||'')); });
+    }
+    function topluSilSay(){
+        const B=topluSilBilgi();
+        if(B.hata){ document.getElementById('toplusil_durum').innerHTML='<div class="durum hata">'+B.hata+'</div>'; return; }
+        const dv=document.getElementById('toplusil_durum');
+        dv.innerHTML='<div class="durum gk">Sorgulanıyor...</div>';
+        apiGet(B.p).then(j=>{
+            const n=(j.data||[]).length;
+            dv.innerHTML='<div class="durum gk">Filtreye uyan <b>'+n+'</b> kayıt bulundu. Silmeden önce listede görmek için <b>Listele</b> bölümündeki filtreleri aynı şekilde kullanabilirsiniz.</div>';
+        });
+    }
+    function topluSil(){
+        const B=topluSilBilgi();
+        if(B.hata){ document.getElementById('toplusil_durum').innerHTML='<div class="durum hata">'+B.hata+'</div>'; return; }
+        const dv=document.getElementById('toplusil_durum');
+        // Önce kaç kayda uyduğunu sorgula
+        apiGet(B.p).then(j=>{
+            const n=(j.data||[]).length;
+            if(n===0){ dv.innerHTML='<div class="durum hata">Bu filtreye uyan kayıt bulunamadı.</div>'; return; }
+            if(!confirm('"'+(B.ders||'Tüm dersler')+'" filtresine uyan '+n+' kazanım KALICI olarak silinecek. Emin misiniz?')) return;
+            apiSend('DELETE',{},B.p).then(j2=>{
+                if(j2.ok){ dv.innerHTML='<div class="durum ok">✅ '+j2.silinen+' kazanım silindi.</div>'; listele(); }
+                else dv.innerHTML='<div class="durum hata">Hata: '+(j2.error||'')+'</div>';
+            });
+        });
+    }
+    function topluSilBilgi(){
+        const kademe=document.getElementById('s_kademe').value;
+        const kategori=document.getElementById('s_kategori').value;
+        const ders=document.getElementById('s_ders').value.trim();
+        const unite=document.getElementById('s_unite').value.trim();
+        if(!ders) return {hata:'Ders adı zorunludur.'};
+        let p='?';
+        if(kademe)p+=`kademe=${encodeURIComponent(kademe)}&`;
+        if(kategori)p+=`kategori=${encodeURIComponent(kategori)}&`;
+        if(ders)p+=`ders=${encodeURIComponent(ders)}&`;
+        if(unite)p+=`unite=${encodeURIComponent(unite)}&`;
+        return {hata:'', p, ders};
     }
     async function kaydet(){
         const id=document.getElementById('e_id').value;
