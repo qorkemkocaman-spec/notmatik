@@ -62,27 +62,34 @@ function kazanimSira(a, b) {
 
 // Supabase/PostgREST tek sorguda 1000 kaydı sınırlayabildiğinden,
 // filtrelere uyan tüm kayıtları sayfa sayfa çekip birleştirir.
+// Performans için önce toplamı (count) alır, tüm sayfaları PARALEL çeker.
 async function tumuGetir(supabase, filtre) {
   const BATCH = 1000;
-  const tum = [];
-  let from = 0;
-  for (;;) {
-    let q = supabase
-      .from("kazanimlar")
-      .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url")
-      .range(from, from + BATCH - 1);
+  const cols = "id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url";
+
+  const filtrele = (q) => {
     if (filtre.kademe) q = q.eq("sinif", filtre.kademe);
     if (filtre.kategori) q = q.eq("kategori", filtre.kategori);
     if (filtre.ders) q = q.eq("ders", filtre.ders);
     if (filtre.unite) q = q.eq("unite", filtre.unite);
-    const { data, error } = await q;
-    if (error) throw new Error(error.message);
-    const donen = data || [];
-    tum.push(...donen);
-    if (donen.length < BATCH) break;
-    from += BATCH;
+    return q;
+  };
+
+  const cnt = await filtrele(supabase.from("kazanimlar").select("id", { count: "exact", head: true }));
+  if (cnt.error) throw new Error(cnt.error.message);
+  const toplam = cnt.count || 0;
+
+  const sayfaSayisi = Math.ceil(toplam / BATCH);
+  const talepler = [];
+  for (let i = 0; i < sayfaSayisi; i++) {
+    const from = i * BATCH;
+    const taleb = filtrele(supabase.from("kazanimlar").select(cols).range(from, from + BATCH - 1)).then((r) => {
+      if (r.error) throw new Error(r.error.message);
+      return r.data || [];
+    });
+    talepler.push(taleb);
   }
-  return tum;
+  return (await Promise.all(talepler)).flat();
 }
 
 export default async function handler(req, res) {
