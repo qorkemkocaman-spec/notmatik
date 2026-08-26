@@ -105,6 +105,7 @@
         <div class="section">
             <h3>📋 Kazanım Listesi <span id="sayac" class="kucuk"></span></h3>
             <div id="liste" style="max-height:600px; overflow:auto;"></div>
+            <div id="listeSayfa" style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;"></div>
         </div>
 
         <!-- ÇIKIŞ -->
@@ -139,6 +140,8 @@
     function apiGet(p){ return fetch('/api/yonetim'+p,{headers:{'x-admin-key':admAnahtar()}}).then(r=>r.json()); }
     function apiSend(method,body,query){ return fetch('/api/yonetim'+ (query||'') ,{method,headers:{'Content-Type':'application/json','x-admin-key':admAnahtar()},body:JSON.stringify(body)}).then(r=>r.json()); }
     function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    // --- Sayfalama durumu ---
+    let g_data=[]; let g_sayfa=1; const G_PAGE=50;
     async function listele(){
         if(!admAnahtar()){ girisYap(); return; }
         const kademe=document.getElementById('f_kademe').value;
@@ -149,18 +152,39 @@
         if(kategori)p+=`kategori=${encodeURIComponent(kategori)}&`;
         if(ders)p+=`ders=${encodeURIComponent(ders)}&`;
         const j=await apiGet(p);
-        const data=j.data||[];
-        document.getElementById('sayac').textContent='('+data.length+' kayıt)';
+        g_data=j.data||[]; g_sayfa=1;
+        document.getElementById('sayac').textContent='('+g_data.length+' kayıt)';
         const dv=document.getElementById('liste');
-        if(!data.length){ dv.innerHTML='<span class="kucuk">Kayıt yok.</span>'; return; }
-        const kategoriSet=new Set(data.map(x=>x.kategori).filter(Boolean));
+        if(!g_data.length){ dv.innerHTML='<span class="kucuk">Kayıt yok.</span>'; document.getElementById('listeSayfa').innerHTML=''; return; }
+        const kategoriSet=new Set(g_data.map(x=>x.kategori).filter(Boolean));
         const fk=document.getElementById('f_kategori'); fk.innerHTML='<option value="">Tümü</option>';
         [...kategoriSet].sort().forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; fk.appendChild(o); });
+        renderSayfa();
+    }
+    function renderSayfa(){
+        const dv=document.getElementById('liste');
+        const toplamSayfa=Math.max(1, Math.ceil(g_data.length/G_PAGE));
+        if(g_sayfa>toplamSayfa) g_sayfa=toplamSayfa;
+        const bas=(g_sayfa-1)*G_PAGE;
+        const gorunen=g_data.slice(bas, bas+G_PAGE);
         let h='<table><tr><th>Kademe</th><th>Kategori</th><th>Ders</th><th>Ünite</th><th>Kazanım</th><th>Puan</th><th>İşlem</th></tr>';
-        data.forEach(r=>{
-            h+=`<tr><td>${esc(r.kademe||r.sinif)}</td><td>${esc(r.kategori)}</td><td>${esc(r.ders)}</td><td>${esc(r.unite)}</td><td>${esc(r.kazanim)}</td><td style="text-align:center">${esc(r.puan_varsayilan)}</td><td style="white-space:nowrap"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="duzenle('${r.id}')">✏️</button> <button class="btn btn-red" style="padding:5px 10px;font-size:12px;" onclick="sil('${r.id}')">🗑️</button></td></tr>`;
+        gorunen.forEach(r=>{
+            const kazi=esc(r.kazanim);
+            h+=`<tr><td>${esc(r.kademe||r.sinif)}</td><td>${esc(r.kategori)}</td><td>${esc(r.ders)}</td><td>${esc(r.unite)}</td><td><div style="max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${kazi}">${kazi}</div></td><td style="text-align:center">${esc(r.puan_varsayilan)}</td><td style="white-space:nowrap"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="duzenle('${r.id}')">✏️</button> <button class="btn btn-red" style="padding:5px 10px;font-size:12px;" onclick="sil('${r.id}')">🗑️</button></td></tr>`;
         });
         h+='</table>'; dv.innerHTML=h;
+        // Sayfalama kontrolleri
+        const sp=document.getElementById('listeSayfa');
+        let b='';
+        b+=`<button class="btn btn-gray" style="padding:5px 12px;font-size:12px;" onclick="g_sayfa>1?sayfaGit(${g_sayfa-1}):0" ${g_sayfa<=1?'disabled':''}>‹ Önceki</button>`;
+        b+=`<span class="kucuk">Sayfa ${g_sayfa} / ${toplamSayfa} (${g_data.length} kayıt)</span>`;
+        b+=`<button class="btn btn-gray" style="padding:5px 12px;font-size:12px;" onclick="g_sayfa<${toplamSayfa}?sayfaGit(${g_sayfa+1}):0" ${g_sayfa>=toplamSayfa?'disabled':''}>Sonraki ›</button>`;
+        sp.innerHTML=b;
+    }
+    function sayfaGit(n){
+        const t=Math.max(1, Math.ceil(g_data.length/G_PAGE));
+        g_sayfa=Math.min(t, Math.max(1,n));
+        renderSayfa();
     }
 function duzenle(id){
         fetch('/api/yonetim?ders='+encodeURIComponent(''),{headers:{'x-admin-key':admAnahtar()}}).then(r=>r.json()).then(j=>{

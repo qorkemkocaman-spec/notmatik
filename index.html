@@ -441,6 +441,21 @@
     // sunucu tarafı /api/kazanimlar Supabase'den okur.
     const KAZANIM_API = "/api/kazanimlar";
     let kazanimVeritabani = [];
+    // Hızlı filtreleme için indeksler (binlerce kaydı her filtrede tekrar taramayız)
+    let kzIndex = { kategoriSet: new Set(), dersMap: new Map(), kazanimMap: new Map() };
+    function kzKurIndeks(){
+        const is=new Set(), dm=new Map(), km=new Map();
+        for(const item of kazanimVeritabani){
+            const anahtarK=item.kademe+"||"+item.kategori;
+            const anahtarD=item.kademe+"||"+item.kategori+"||"+item.ders;
+            if(item.kategori) is.add(item.kategori);
+            if(!dm.has(anahtarK)) dm.set(anahtarK, new Set());
+            dm.get(anahtarK).add(item.ders);
+            if(!km.has(anahtarD)) km.set(anahtarD, []);
+            km.get(anahtarD).push({kazanim:item.kazanim, puan:item.puan});
+        }
+        kzIndex={kategoriSet:is, dersMap:dm, kazanimMap:km};
+    }
     async function veritabaniniYukle(){
         const btn=document.getElementById('btn-veritabani');
         btn.innerText="⏳ Yükleniyor..."; btn.disabled=true;
@@ -458,6 +473,7 @@
                 kazanimVeritabani.push({kademe,kategori,ders,kazanim,puan});
             });
             if(kazanimVeritabani.length===0)throw new Error("Veri bulunamadı.");
+            kzKurIndeks();
             // Kademe dropdown sabit 7 seçenek
             const kademeler=["İlkokul","Ortaokul","İHO","Lise","Spor Lisesi","Güzel Sanatlar Lisesi","Meslek Lisesi"];
             const sec=document.getElementById('a_sinifSeviyesi');
@@ -486,16 +502,26 @@
         secD.innerHTML='<option value="">Seçiniz...</option>'; secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>';
         secD.disabled=secKaz.disabled=true; ip.disabled=btn.disabled=true; ip.value="";
         if(!kategori)return;
-        let set=new Set(); kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders!=="")set.add(item.ders);});
-        Array.from(set).sort().forEach(d=>secD.innerHTML+=`<option value="${d}">${d}</option>`);
-        secD.disabled=false;
+        const anahtarK=kademe+"||"+kategori;
+        let dersler=Array.from(kzIndex.dersMap.get(anahtarK) || []);
+        if(dersler.length===0){ kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders!=="")dersler.push(item.ders);}); dersler=[...new Set(dersler)]; }
+        const secilmis=document.getElementById('a_dersAdiFiltre');
+        secilmis.innerHTML='<option value="">Seçiniz...</option>'+dersler.sort().map(d=>`<option value="${d}">${d}</option>`).join('');
+        secilmis.disabled=false;
     }
     function filtreleKazanimlar(){
         const kademe=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value, ders=document.getElementById('a_dersAdiFiltre').value;
         const secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
         secKaz.innerHTML='<option value="">Kazanım Seçiniz...</option>'; ip.value=""; ip.disabled=btn.disabled=true;
         if(!ders){secKaz.disabled=true; return;}
-        kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders===ders)secKaz.innerHTML+=`<option value="${item.kazanim}" data-puan="${item.puan}">${item.kazanim}</option>`;});
+        const anahtarD=kademe+"||"+kategori+"||"+ders;
+        let liste=kzIndex.kazanimMap.get(anahtarD) || [];
+        if(liste.length===0){ kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders===ders)liste.push({kazanim:item.kazanim,puan:item.puan});}); }
+        // Tek seferde innerHTML kurulumu (her eleman için ayrı DOM/string ekleme yerine)
+        const frag=document.createDocumentFragment();
+        const bos=document.createElement('option'); bos.value=""; bos.textContent="Kazanım Seçiniz..."; frag.appendChild(bos);
+        liste.forEach(k=>{ const o=document.createElement('option'); o.value=k.kazanim; o.setAttribute('data-puan',k.puan); o.textContent=k.kazanim; frag.appendChild(o); });
+        secKaz.innerHTML=''; secKaz.appendChild(frag);
         secKaz.disabled=false;
     }
     function puanDoldur(){
