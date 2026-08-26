@@ -106,7 +106,6 @@
         <button id="btn-analiz" class="tab-btn active" onclick="switchTab('analiz')">📊 Sınav Analizi</button>
         <button id="btn-perf" class="tab-btn" onclick="switchTab('perf')">🎯 Performans & Proje Dağıtımı</button>
         <button id="btn-iletisim" class="tab-btn" onclick="switchTab('iletisim')">ℹ️ Nasıl Kullanılır & İletişim</button>
-        <button id="btn-admin" class="tab-btn" onclick="switchTab('admin')">🔐 Admin</button>
     </div>
 
     <div id="view-analiz">
@@ -129,11 +128,11 @@
             <div style="background: #e8f4f8; padding: 15px; border-radius: 6px; border: 1px solid #bce8f1; margin-bottom: 15px;">
                 <button id="btn-veritabani" class="btn btn-warning" style="width: 100%; font-size: 15px; margin-bottom: 10px;" onclick="veritabaniniYukle()">🔄 Kazanım Veritabanına Bağlan</button>
                 <div id="filtre-alani" style="display: none; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-                    <div style="flex:1; min-width:100px;"><label style="font-size:12px; color:#2980b9;">1. Sınıf</label><select id="a_sinifSeviyesi" onchange="filtreleKategori()" style="width:100%; padding:8px;"><option value="">Seçiniz...</option></select></div>
-                    <div style="flex:1; min-width:140px;"><label style="font-size:12px; color:#2980b9;">2. Kategori</label><select id="a_dersTuru" onchange="filtreleDersler()" style="width:100%; padding:8px;" disabled><option value="">Seçiniz...</option></select></div>
+                    <div style="flex:1; min-width:120px;"><label style="font-size:12px; color:#2980b9;">1. Kademe</label><select id="a_sinifSeviyesi" onchange="filtreleKategori()" style="width:100%; padding:8px;"><option value="">Seçiniz...</option></select></div>
+                    <div style="flex:1; min-width:120px;"><label style="font-size:12px; color:#2980b9;">2. Kategori</label><select id="a_dersTuru" onchange="filtreleDersler()" style="width:100%; padding:8px;" disabled><option value="">Seçiniz...</option></select></div>
                     <div style="flex:1; min-width:140px;"><label style="font-size:12px; color:#2980b9;">3. Ders</label><select id="a_dersAdiFiltre" onchange="filtreleKazanimlar()" style="width:100%; padding:8px;" disabled><option value="">Seçiniz...</option></select></div>
                     <div style="flex:3; min-width:250px;"><label style="font-size:12px; color:#2980b9;">4. Kazanım Seçimi</label><select id="a_kazanimSecici" onchange="puanDoldur()" style="width:100%; padding:8px;" disabled><option value="">Önce ders seçiniz...</option></select></div>
-                    <div style="flex:0.5; min-width:70px;"><label style="font-size:12px; color:#2980b9;">Puan</label><input type="number" id="a_secilenPuan" style="width:100%; padding:8px;" placeholder="Not" disabled></div>
+                    <div style="flex:0.5; min-width:70px;"><label style="font-size:12px; color:#2980b9;">5. Puan</label><input type="number" id="a_secilenPuan" style="width:100%; padding:8px;" placeholder="Not" disabled></div>
                     <button id="btn-kazanim-ekle" class="btn btn-success" onclick="seciliKazanimiTabloyaEkle()" style="flex:1; min-width:100px; padding:8px; height:36px; margin-bottom:1px;" disabled>➕ Ekle</button>
                 </div>
             </div>
@@ -350,44 +349,6 @@
         </div>
     </div>
 
-    <!-- ============ ADMIN YÖNETİM ============ -->
-    <div id="view-admin" style="display:none;">
-        <h2>🔐 Admin Paneli — Kazanım Yönetimi</h2>
-
-        <div class="section" style="background:#fdf2f2; border:1px solid #f5c6c6;">
-            <h3>1. Giriş</h3>
-            <p style="color:#555; line-height:1.5;">Kazanım havuzunu düzenlemek için admin anahtarını girin.</p>
-            <input type="password" id="adm_key" placeholder="Admin anahtarı" style="max-width:300px;" onkeydown="if(event.key==='Enter')admGiris()">
-            <button class="btn" style="margin-left:8px;" onclick="admGiris()">Giriş</button>
-            <div id="adm_durum" style="margin-top:8px; color:#c0392b; font-weight:bold;"></div>
-        </div>
-
-        <div id="adm_panel" style="display:none;">
-            <div class="section">
-                <h3>2. Excel Şablonu İndir</h3>
-                <p style="color:#555; line-height:1.5;">
-                    Aşağıdaki şablonu indirip Excel'de doldurun. Sütunlar:
-                    <b>sinif, kategori, ders, unite, kazanim, puan_varsayilan, kaynak, kaynak_url</b>.
-                </p>
-                <button class="btn btn-success" onclick="admSablonIndir()">⬇️ Kazanım Şablonu İndir (CSV)</button>
-            </div>
-
-            <div class="section">
-                <h3>3. Doldurulmuş Dosyayı Yükle</h3>
-                <p style="color:#555; line-height:1.5;">Doldurduğunuz CSV dosyasını seçin. Sistem kazanımları veritabanına işler (tekrar edenler güncellenir).</p>
-                <input type="file" id="adm_dosya" accept=".csv,text/csv" style="margin-bottom:10px;">
-                <button class="btn" onclick="admYukle()">📤 Yükle ve İşle</button>
-                <div id="adm_sonuc" style="margin-top:12px; font-weight:bold;"></div>
-            </div>
-
-            <div class="section">
-                <h3>4. Mevcut Veriyi İncele</h3>
-                <button class="btn" style="background-color:#7f8c8d;" onclick="admListele()">📋 Kazanımları Listele</button>
-                <div id="adm_liste" style="margin-top:12px; max-height:400px; overflow:auto;"></div>
-            </div>
-        </div>
-    </div>
-
     <div class="dev-footer">
         OtoNot Eğitim Otomasyonları Paketi | Tasarlayan ve Geliştiren: <b>Görkem KOCAMAN</b>
     </div>
@@ -465,11 +426,9 @@
         document.getElementById('view-analiz').style.display = tab==='analiz'?'block':'none';
         document.getElementById('view-perf').style.display = tab==='perf'?'block':'none';
         document.getElementById('view-iletisim').style.display = tab==='iletisim'?'block':'none';
-        document.getElementById('view-admin').style.display = tab==='admin'?'block':'none';
         document.getElementById('btn-analiz').classList.toggle('active', tab==='analiz');
         document.getElementById('btn-perf').classList.toggle('active', tab==='perf');
         document.getElementById('btn-iletisim').classList.toggle('active', tab==='iletisim');
-        document.getElementById('btn-admin').classList.toggle('active', tab==='admin');
         if(tab==='analiz') document.getElementById('dynamicPrintCss').innerHTML = cssPrintAnaliz;
         else if(tab==='perf') document.getElementById('dynamicPrintCss').innerHTML = cssPrintPerf;
         else document.getElementById('dynamicPrintCss').innerHTML = cssPrintIletisim;
@@ -491,48 +450,52 @@
             const json=await res.json();
             const kayitlar = Array.isArray(json) ? json : (json && json.data) || [];
             if(!Array.isArray(kayitlar)||kayitlar.length===0)throw new Error("Veri bulunamadı. Supabase bağlantısını kontrol edin.");
-            kazanimVeritabani=[]; let siniflarSet=new Set();
+            kazanimVeritabani=[];
             kayitlar.forEach(item=>{
-                const sinif=(item.sinif||"").trim(), kategori=(item.kategori||"").trim(), ders=(item.ders||"").trim(), kazanim=(item.kazanim||"").trim();
-                if(sinif===""||kazanim==="")return;
+                const kademe=(item.kademe||item.sinif||"").trim(), kategori=(item.kategori||"").trim(), ders=(item.ders||"").trim(), kazanim=(item.kazanim||"").trim();
+                if(kademe===""||kazanim==="")return;
                 const puan=(item.puan_varsayilan!=null)?String(item.puan_varsayilan):"10";
-                kazanimVeritabani.push({sinif,kategori,ders,kazanim,puan});
-                siniflarSet.add(sinif);
+                kazanimVeritabani.push({kademe,kategori,ders,kazanim,puan});
             });
             if(kazanimVeritabani.length===0)throw new Error("Veri bulunamadı.");
+            // Kademe dropdown sabit 7 seçenek
+            const kademeler=["İlkokul","Ortaokul","İHO","Lise","Spor Lisesi","Güzel Sanatlar Lisesi","Meslek Lisesi"];
             const sec=document.getElementById('a_sinifSeviyesi');
             sec.innerHTML='<option value="">Seçiniz...</option>';
-            Array.from(siniflarSet).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(s=>sec.innerHTML+=`<option value="${s}">${s}</option>`);
+            kademeler.forEach(k=>sec.innerHTML+=`<option value="${k}">${k}</option>`);
             document.getElementById('filtre-alani').style.display='flex';
             btn.style.display='none';
         }catch(e){ alert(`❌ BAĞLANTI HATASI:\n\n${e.message}`); btn.innerText="🔄 Yeniden Dene"; btn.disabled=false; }
     }
     function filtreleKategori(){
-        const sinif=document.getElementById('a_sinifSeviyesi').value;
+        const kademe=document.getElementById('a_sinifSeviyesi').value;
         const secK=document.getElementById('a_dersTuru'), secD=document.getElementById('a_dersAdiFiltre'), secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
-        secK.innerHTML='<option value="">Seçiniz...</option>'; secD.innerHTML='<option value="">Önce kategori seçiniz...</option>'; secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>';
+        secD.innerHTML='<option value="">Seçiniz...</option>'; secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>';
         secK.disabled=secD.disabled=secKaz.disabled=true; ip.disabled=btn.disabled=true; ip.value="";
-        if(!sinif)return;
-        let set=new Set(); kazanimVeritabani.forEach(item=>{if(item.sinif===sinif&&item.kategori!=="")set.add(item.kategori);});
+        secK.innerHTML='<option value="">Seçiniz...</option>';
+        if(!kademe)return;
+        // Kategori: veride bu kademede hangi kategoriler varsa listele (Ortak/Seçmeli)
+        let set=new Set(); kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori!=="")set.add(item.kategori);});
+        if(set.size===0)set.add("Ortak Ders");
         Array.from(set).sort().forEach(k=>secK.innerHTML+=`<option value="${k}">${k}</option>`);
         secK.disabled=false;
     }
     function filtreleDersler(){
-        const sinif=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value;
+        const kademe=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value;
         const secD=document.getElementById('a_dersAdiFiltre'), secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
         secD.innerHTML='<option value="">Seçiniz...</option>'; secKaz.innerHTML='<option value="">Önce ders seçiniz...</option>';
         secD.disabled=secKaz.disabled=true; ip.disabled=btn.disabled=true; ip.value="";
         if(!kategori)return;
-        let set=new Set(); kazanimVeritabani.forEach(item=>{if(item.sinif===sinif&&item.kategori===kategori&&item.ders!=="")set.add(item.ders);});
+        let set=new Set(); kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders!=="")set.add(item.ders);});
         Array.from(set).sort().forEach(d=>secD.innerHTML+=`<option value="${d}">${d}</option>`);
         secD.disabled=false;
     }
     function filtreleKazanimlar(){
-        const sinif=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value, ders=document.getElementById('a_dersAdiFiltre').value;
+        const kademe=document.getElementById('a_sinifSeviyesi').value, kategori=document.getElementById('a_dersTuru').value, ders=document.getElementById('a_dersAdiFiltre').value;
         const secKaz=document.getElementById('a_kazanimSecici'), ip=document.getElementById('a_secilenPuan'), btn=document.getElementById('btn-kazanim-ekle');
         secKaz.innerHTML='<option value="">Kazanım Seçiniz...</option>'; ip.value=""; ip.disabled=btn.disabled=true;
         if(!ders){secKaz.disabled=true; return;}
-        kazanimVeritabani.forEach(item=>{if(item.sinif===sinif&&item.kategori===kategori&&item.ders===ders)secKaz.innerHTML+=`<option value="${item.kazanim}" data-puan="${item.puan}">${item.kazanim}</option>`;});
+        kazanimVeritabani.forEach(item=>{if(item.kademe===kademe&&item.kategori===kategori&&item.ders===ders)secKaz.innerHTML+=`<option value="${item.kazanim}" data-puan="${item.puan}">${item.kazanim}</option>`;});
         secKaz.disabled=false;
     }
     function puanDoldur(){
@@ -1556,125 +1519,7 @@
     };
 
     // ==========================================
-    // ADMIN PANELİ
-    // ==========================================
-    function admGiris(){
-        const a = document.getElementById('adm_key').value.trim();
-        const durum = document.getElementById('adm_durum');
-        if(!a){ durum.textContent = 'Lütfen admin anahtarını girin.'; return; }
-        durum.textContent = 'Doğrulanıyor...';
-        fetch('/api/admin-dogrula', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ anahtar: a }) })
-            .then(r=>r.json())
-            .then(res=>{
-                if(res.ok){
-                    sessionStorage.setItem('adm_key', a);
-                    document.getElementById('adm_panel').style.display='block';
-                    durum.style.color='#27ae60'; durum.textContent='✅ Giriş başarılı.';
-                } else {
-                    durum.style.color='#c0392b'; durum.textContent=res.error||'Geçersiz anahtar.';
-                }
-            })
-            .catch(()=>{ durum.style.color='#c0392b'; durum.textContent='Doğrulama hatası.'; });
-    }
-    function admAnahtar(){ return sessionStorage.getItem('adm_key') || ''; }
-    function admSablonIndir(){
-        const ornek = [
-            ['sinif','kategori','ders','unite','kazanim','puan_varsayilan','kaynak','kaynak_url'],
-            ['10','MEB-TYMM','Kimya','2. Ünite','KIM.2.1. Maddelerin yapısını modellerle açıklayabilme','10','MEB-TYMM',''],
-            ['9','Ortaöğretim','Tarih','1. Ünite','TAR.1.1. Tarih biliminin konusunu açıklar.','10','MEB',''],
-        ];
-        let csv = '\uFEFF' + ornek.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'kazanim_sablonu.csv';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
-    }
-    function admCSVParser(metin, ayir=';'){
-        const satirlar = metin.replace(/\r/g,'').split('\n').filter(s=>s.trim()!=='');
-        const rows = [];
-        for(const satir of satirlar){
-            const cols = [];
-            let cur='', inQ=false;
-            for(let i=0;i<satir.length;i++){
-                const c = satir[i];
-                if(inQ){ if(c==='"'){ if(satir[i+1]==='"'){cur+='"';i++;} else inQ=false;} else cur+=c; }
-                else if(c==='"') inQ=true;
-                else if(c===ayir){ cols.push(cur); cur=''; }
-                else cur+=c;
-            }
-            cols.push(cur);
-            rows.push(cols.map(c=>c.replace(/^"|"$/g,'').trim()));
-        }
-        return rows;
-    }
-    function admYukle(){
-        const dosya = document.getElementById('adm_dosya').files[0];
-        const sonuc = document.getElementById('adm_sonuc');
-        if(!dosya){ sonuc.textContent='Lütfen bir CSV dosyası seçin.'; sonuc.style.color='#c0392b'; return; }
-        if(!admAnahtar()){ sonuc.textContent='Önce giriş yapın.'; sonuc.style.color='#c0392b'; return; }
-        const reader = new FileReader();
-        reader.onload = async (e)=>{
-            const metin = e.target.result;
-            const csv = admCSVParser(metin);
-            if(csv.length < 2){ sonuc.textContent='Dosyada veri yok.'; sonuc.style.color='#c0392b'; return; }
-            const hdr = csv[0].map(h=>h.toLowerCase().trim());
-            const idx = {};
-            ['sinif','kategori','ders','unite','kazanim','puan_varsayilan','kaynak','kaynak_url'].forEach(k=>{ idx[k]=hdr.indexOf(k); });
-            if(idx.ders<0 || idx.kazanim<0 || idx.sinif<0){
-                sonuc.textContent='Şablon sütunları eksik (sinif, ders, kazanim zorunludur).'; sonuc.style.color='#c0392b'; return;
-            }
-            const rows = [];
-            const g = (i,k)=> idx[k]>=0 ? (csv[i][idx[k]]||'') : '';
-            for(let i=1;i<csv.length;i++){
-                const r = csv[i];
-                if(!r) continue;
-                const sinif=g(i,'sinif'), ders=g(i,'ders'), kazanim=g(i,'kazanim');
-                if(!ders || !kazanim) continue;
-                rows.push({
-                    sinif, kategori:g(i,'kategori'), ders, unite:g(i,'unite'),
-                    kazanim, puan_varsayilan:parseInt(g(i,'puan_varsayilan'),10)||10,
-                    kaynak:g(i,'kaynak')||'MEB', kaynak_url:g(i,'kaynak_url')
-                });
-            }
-            if(rows.length===0){ sonuc.textContent='Yüklenecek geçerli satır yok.'; sonuc.style.color='#c0392b'; return; }
-            sonuc.textContent='İşleniyor ('+rows.length+' satır)...'; sonuc.style.color='#2980b9';
-            try{
-                const resp = await fetch('/api/admin-yukle', {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json','x-admin-key':admAnahtar()},
-                    body: JSON.stringify({ rows })
-                });
-                const j = await resp.json();
-                if(resp.ok){ sonuc.textContent='✅ Başarılı: '+j.islenen+' kazanım işlendi.'; sonuc.style.color='#27ae60'; }
-                else { sonuc.textContent='Hata: '+(j.error||'bilinmeyen'); sonuc.style.color='#c0392b'; }
-            }catch(err){ sonuc.textContent='Yükleme hatası: '+err.message; sonuc.style.color='#c0392b'; }
-        };
-        reader.readAsText(dosya, 'utf-8');
-    }
-    function admListele(){
-        const div = document.getElementById('adm_liste');
-        if(!admAnahtar()){ div.innerHTML='<span style="color:#c0392b">Önce giriş yapın.</span>'; return; }
-        div.innerHTML='Yükleniyor...';
-        fetch('/api/kazanimlar')
-            .then(r=>r.json())
-            .then(j=>{
-                const data = j.data || j || [];
-                if(!data.length){ div.innerHTML='<span>Henüz kazanım yok.</span>'; return; }
-                const g = {};
-                data.forEach(k=>{ const key=k.ders+'|'+k.kategori+'|'+k.sinif; if(!g[key])g[key]=0; g[key]++; });
-                let html='<table style="width:100%;border-collapse:collapse;font-size:13px;"><tr style="background:#eee;"><th style="border:1px solid #ccc;padding:4px;">Ders</th><th style="border:1px solid #ccc;padding:4px;">Kategori</th><th style="border:1px solid #ccc;padding:4px;">Sınıf</th><th style="border:1px solid #ccc;padding:4px;">Kazanım</th></tr>';
-                for(const key in g){
-                    const [ders,kategori,sinif]=key.split('|');
-                    html+=`<tr><td style="border:1px solid #ccc;padding:4px;">${ders}</td><td style="border:1px solid #ccc;padding:4px;">${kategori}</td><td style="border:1px solid #ccc;padding:4px;">${sinif}</td><td style="border:1px solid #ccc;padding:4px;text-align:center;">${g[key]}</td></tr>`;
-                }
-                html+='</table>';
-                div.innerHTML=html;
-            })
-            .catch(e=>{ div.innerHTML='<span style="color:#c0392b">Listeleme hatası: '+e.message+'</span>'; });
-    }
-</script>
+    </script>
 
 </body>
 </html>

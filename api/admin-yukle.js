@@ -34,16 +34,16 @@ export default async function handler(req, res) {
     const rows = Array.isArray(body?.rows) ? body.rows : [];
     if (rows.length === 0) return res.status(400).json({ error: "Satır bulunamadı." });
 
-    // Satırları temizle / doğrula
+    // Satırları temizle / doğrula (kademe veya sinif alanı kabul edilir)
     const temiz = rows
       .map((r) => ({
-        sinif: String(r.sinif ?? "").trim(),
+        sinif: String(r.kademe ?? r.sinif ?? "").trim(),
         kategori: String(r.kategori ?? "").trim(),
         ders: String(r.ders ?? "").trim(),
         unite: String(r.unite ?? "").trim(),
         kazanim: String(r.kazanim ?? "").trim(),
-        puan_varsayilan: parseInt(r.puan_varsayilan ?? 10, 10) || 10,
-        kaynak: String(r.kaynak ?? "MEB").trim(),
+        puan_varsayilan: parseInt(r.puan_varsayilan ?? r.puan ?? 10, 10) || 10,
+        kaynak: String(r.kaynak ?? "OtoNot").trim(),
         kaynak_url: String(r.kaynak_url ?? "").trim(),
       }))
       .filter((r) => r.ders && r.kazanim && r.sinif);

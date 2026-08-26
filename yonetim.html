@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Yönetim — OtoNot Kazanım Yönetimi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e9ecef; margin:0; padding:20px; color:#333; }
+        .container { max-width: 1200px; margin:0 auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.15); }
+        h2 { color:#2c3e50; border-bottom:2px solid #eee; padding-bottom:10px; }
+        .section { margin-bottom:22px; padding:18px; border:1px solid #e1e8ed; border-radius:6px; background:#fafbfc; }
+        h3 { color:#2c3e50; margin:0 0 12px; font-size:16px; }
+        .btn { background:#3498db; color:#fff; border:none; padding:10px 18px; border-radius:4px; cursor:pointer; font-size:14px; font-weight:bold; margin-right:6px; }
+        .btn:hover { background:#2980b9; }
+        .btn-green { background:#27ae60; } .btn-green:hover{background:#2ecc71;}
+        .btn-red { background:#e74c3c; } .btn-red:hover{background:#c0392b;}
+        .btn-gray { background:#7f8c8d; } .btn-gray:hover{background:#95a5a6;}
+        input, select, textarea { width:100%; padding:9px; border:1px solid #ccd1d9; border-radius:4px; font-size:14px; box-sizing:border-box; margin-bottom:8px; }
+        label { font-weight:600; color:#555; display:block; margin-bottom:4px; font-size:13px; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+        table { width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+        th { background:#2c3e50; color:#fff; padding:8px; text-align:left; }
+        td { border:1px solid #ddd; padding:6px; vertical-align:top; }
+        tr:nth-child(even) td { background:#f7f9fa; }
+        .durum { padding:10px; border-radius:4px; font-weight:bold; margin-top:10px; }
+        .ok { background:#d5f5e3; color:#1e8449; }
+        .hata { background:#fadbd8; color:#c0392b; }
+        .gk { background:#fdf2e9; color:#a04000; }
+        .kucuk { font-size:12px; color:#888; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🔐 OtoNot — Kazanım Yönetim Paneli</h2>
+
+    <!-- GİRİŞ -->
+    <div id="giris_kutusu" class="section">
+        <h3>Giriş</h3>
+        <p class="kucuk">Bu sayfa yalnızca yetkili kullanıcılar içindir. Admin anahtarınızı girin.</p>
+        <input type="password" id="adm_key" placeholder="Admin anahtarı" onkeydown="if(event.key==='Enter')girisYap()">
+        <button class="btn" onclick="girisYap()">Giriş</button>
+        <div id="giris_durum" class="kucuk" style="margin-top:8px;"></div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="panel" style="display:none;">
+
+        <!-- FİLTRE -->
+        <div class="section search">
+            <h3>🔍 Filtrele</h3>
+            <div class="grid">
+                <div><label>Kademe</label><select id="f_kademe"><option value="">Tümü</option></select></div>
+                <div><label>Kategori</label><select id="f_kategori"><option value="">Tümü</option></select></div>
+                <div><label>Ders</label><input type="text" id="f_ders" placeholder="Ders adı ara"></div>
+            </div>
+            <button class="btn" onclick="listele()">📋 Listele</button>
+            <button class="btn btn-green" onclick="sablonIndir()">⬇️ Şablon İndir</button>
+        </div>
+
+        <!-- YENİ EKLE -->
+        <div class="section">
+            <h3>➕ Yeni Kazanım / Düzenle</h3>
+            <div class="grid">
+                <div><label>Kademe</label><select id="e_kademe"></select></div>
+                <div><label>Kategori</label><select id="e_kategori">
+                    <option value="Ortak Ders">Ortak Ders</option>
+                    <option value="Seçmeli Ders">Seçmeli Ders</option>
+                </select></div>
+                <div><label>Ders Adı</label><input type="text" id="e_ders"></div>
+                <div><label>Ünite</label><input type="text" id="e_unite"></div>
+                <div><label>Puan</label><input type="number" id="e_puan" value="10"></div>
+            </div>
+            <label>Kazanım Metni</label>
+            <textarea id="e_kazanim" rows="3"></textarea>
+            <input type="hidden" id="e_id">
+            <button class="btn btn-green" onclick="kaydet()">💾 Kaydet</button>
+            <button class="btn btn-gray" onclick="temizleForm()" style="display:none;" id="btn_iptal">İptal</button>
+        </div>
+
+        <!-- TOPLU YÜKLE -->
+        <div class="section">
+            <h3>📤 Toplu Excel/CSV Yükle</h3>
+            <p class="kucuk">Şablonu indirip doldurun, sonra buradan yükleyin. Tekrar edenler güncellenir.</p>
+            <input type="file" id="adm_dosya" accept=".csv,text/csv">
+            <button class="btn" onclick="topluYukle()">📤 Yükle ve İşle</button>
+            <div id="yukle_durum"></div>
+        </div>
+
+        <!-- LİSTE -->
+        <div class="section">
+            <h3>📋 Kazanım Listesi <span id="sayac" class="kucuk"></span></h3>
+            <div id="liste" style="max-height:600px; overflow:auto;"></div>
+        </div>
+
+        <!-- ÇIKIŞ -->
+        <div class="section" style="background:#fef9e7;">
+            <button class="btn btn-red" onclick="cikis()">🚪 Çıkış</button>
+        </div>
+    </div>
+</div>
+<script>
+    const KADEMELER=["İlkokul","Ortaokul","İHO","Lise","Spor Lisesi","Güzel Sanatlar Lisesi","Meslek Lisesi"];
+    function admAnahtar(){ return sessionStorage.getItem('yadm') || ''; }
+    function girisYap(){
+        const a = document.getElementById('adm_key').value.trim();
+        const d = document.getElementById('giris_durum');
+        if(!a){ d.textContent='Anahtar girin.'; return; }
+        fetch('/api/admin-dogrula',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({anahtar:a})})
+            .then(r=>r.json()).then(res=>{
+                if(res.ok){ sessionStorage.setItem('yadm',a); d.textContent='✅ Giriş başarılı.'; document.getElementById('giris_kutusu').style.display='none'; document.getElementById('panel').style.display='block'; kademeDoldur(); listele(); }
+                else { d.textContent=res.error||'Geçersiz anahtar.'; }
+            }).catch(()=>{ d.textContent='Bağlantı hatası.'; });
+        if(sessionStorage.getItem('yadm')){ document.getElementById('giris_kutusu').style.display='none'; document.getElementById('panel').style.display='block'; kademeDoldur(); listele(); }
+    }
+    function cikis(){ sessionStorage.removeItem('yadm'); location.reload(); }
+    function kademeDoldur(){
+        const sel=document.getElementById('e_kademe'); sel.innerHTML='';
+        KADEMELER.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); });
+        const fk=document.getElementById('f_kademe'); fk.innerHTML='<option value="">Tümü</option>';
+        KADEMELER.forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; fk.appendChild(o); });
+    }
+    function apiGet(p){ return fetch('/api/yonetim'+p,{headers:{'x-admin-key':admAnahtar()}}).then(r=>r.json()); }
+    function apiSend(method,body,query){ return fetch('/api/yonetim'+ (query||'') ,{method,headers:{'Content-Type':'application/json','x-admin-key':admAnahtar()},body:JSON.stringify(body)}).then(r=>r.json()); }
+    function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    async function listele(){
+        if(!admAnahtar()){ girisYap(); return; }
+        const kademe=document.getElementById('f_kademe').value;
+        const kategori=document.getElementById('f_kategori').value;
+        const ders=document.getElementById('f_ders').value.trim();
+        let p='?';
+        if(kademe)p+=`kademe=${encodeURIComponent(kademe)}&`;
+        if(kategori)p+=`kategori=${encodeURIComponent(kategori)}&`;
+        if(ders)p+=`ders=${encodeURIComponent(ders)}&`;
+        const j=await apiGet(p);
+        const data=j.data||[];
+        document.getElementById('sayac').textContent='('+data.length+' kayıt)';
+        const dv=document.getElementById('liste');
+        if(!data.length){ dv.innerHTML='<span class="kucuk">Kayıt yok.</span>'; return; }
+        const kategoriSet=new Set(data.map(x=>x.kategori).filter(Boolean));
+        const fk=document.getElementById('f_kategori'); fk.innerHTML='<option value="">Tümü</option>';
+        [...kategoriSet].sort().forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; fk.appendChild(o); });
+        let h='<table><tr><th>Kademe</th><th>Kategori</th><th>Ders</th><th>Ünite</th><th>Kazanım</th><th>Puan</th><th>İşlem</th></tr>';
+        data.forEach(r=>{
+            h+=`<tr><td>${esc(r.kademe||r.sinif)}</td><td>${esc(r.kategori)}</td><td>${esc(r.ders)}</td><td>${esc(r.unite)}</td><td>${esc(r.kazanim)}</td><td style="text-align:center">${esc(r.puan_varsayilan)}</td><td style="white-space:nowrap"><button class="btn" style="padding:5px 10px;font-size:12px;" onclick="duzenle('${r.id}')">✏️</button> <button class="btn btn-red" style="padding:5px 10px;font-size:12px;" onclick="sil('${r.id}')">🗑️</button></td></tr>`;
+        });
+        h+='</table>'; dv.innerHTML=h;
+    }
+function duzenle(id){
+        fetch('/api/yonetim?ders='+encodeURIComponent(''),{headers:{'x-admin-key':admAnahtar()}}).then(r=>r.json()).then(j=>{
+            const kayit=j.data.find(x=>x.id===id);
+            if(kayit){
+                document.getElementById('e_id').value=kayit.id;
+                document.getElementById('e_kademe').value=kayit.kademe||kayit.sinif||'';
+                document.getElementById('e_kategori').value=kayit.kategori||'Ortak Ders';
+                document.getElementById('e_ders').value=kayit.ders||'';
+                document.getElementById('e_unite').value=kayit.unite||'';
+                document.getElementById('e_puan').value=kayit.puan_varsayilan||10;
+                document.getElementById('e_kazanim').value=kayit.kazanim||'';
+                document.getElementById('btn_iptal').style.display='inline-block';
+                document.getElementById('e_kazanim').scrollIntoView({behavior:'smooth'});
+            }
+        });
+    }
+    function sil(id){
+        if(!confirm('Bu kazanımı silmek istediğinize emin misiniz?')) return;
+        apiSend('DELETE',{id}).then(j=>{ if(j.ok){ listele(); } else alert('Hata: '+(j.error||'')); });
+    }
+    async function kaydet(){
+        const id=document.getElementById('e_id').value;
+        const body={
+            kademe:document.getElementById('e_kademe').value,
+            kategori:document.getElementById('e_kategori').value,
+            ders:document.getElementById('e_ders').value,
+            unite:document.getElementById('e_unite').value,
+            kazanim:document.getElementById('e_kazanim').value,
+            puan_varsayilan:parseInt(document.getElementById('e_puan').value)||10,
+            kaynak:'OtoNot',
+        };
+        if(id) body.id=id;
+        if(!body.kademe||!body.ders||!body.kazanim){ alert('Kademe, ders ve kazanım zorunludur.'); return; }
+        const j = id ? await apiSend('PUT',body) : await apiSend('POST',body);
+        if(j.ok){ temizleForm(); listele(); alert('Kaydedildi.'); }
+        else alert('Hata: '+(j.error||''));
+    }
+    function temizleForm(){
+        document.getElementById('e_id').value='';
+        document.getElementById('e_ders').value='';
+        document.getElementById('e_unite').value='';
+        document.getElementById('e_puan').value='10';
+        document.getElementById('e_kazanim').value='';
+        document.getElementById('btn_iptal').style.display='none';
+    }
+    function sablonIndir(){
+        const ornek=[
+            ['kademe','kategori','ders','unite','kazanim','puan'],
+            ['İlkokul','Ortak Ders','Matematik','1. Ünite','Mat.1.1. Doğal sayıları okur ve yazar.','10'],
+            ['Lise','Seçmeli Ders','Proje Tasarımı','2. Ünite','Proje amacını ve kapsamını belirler.','10'],
+        ];
+        let csv='\uFEFF'+ornek.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+        const b=new Blob([csv],{type:'text/csv;charset=utf-8'});
+        const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='kazanim_sablon.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+    function topluYukle(){
+        const f=document.getElementById('adm_dosya');
+        const dv=document.getElementById('yukle_durum');
+        if(!f.files[0]){ dv.innerHTML='<div class="durum hata">Dosya seçin.</div>'; return; }
+        const reader=new FileReader();
+        reader.onload=async (e)=>{
+            const rows=csvParse(e.target.result);
+            if(rows.length<2){ dv.innerHTML='<div class="durum hata">Veri yok.</div>'; return; }
+            const hdr=rows[0].map(h=>h.toLowerCase().trim());
+            const ix={};
+            ['kademe','kategori','ders','unite','kazanim','puan'].forEach(k=>{ ix[k]=hdr.indexOf(k); if(ix[k]<0 && k==='kazanim') ix[k]=hdr.indexOf('kazanım'); });
+            if(ix.kademe<0||ix.ders<0||ix.kazanim<0){ dv.innerHTML='<div class="durum hata">Şablon sütunları eksik (kademe, ders, kazanim).</div>'; return; }
+            const g=(i,k)=> ix[k]>=0 ? (rows[i][ix[k]]||'') : '';
+            const satirlar=[];
+            for(let i=1;i<rows.length;i++){
+                const kademe=g(i,'kademe'), ders=g(i,'ders'), kazan=g(i,'kazanim');
+                if(!kademe||!ders||!kazan) continue;
+                satirlar.push({kademe,kategori:g(i,'kategori')||'Ortak Ders',ders,unite:g(i,'unite'),kazanim:kazan,puan_varsayilan:parseInt(g(i,'puan'))||10,kaynak:'OtoNot'});
+            }
+            dv.innerHTML='<div class="durum gk">'+satirlar.length+' satır işleniyor...</div>';
+            const res=await fetch('/api/admin-yukle',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':admAnahtar()},body:JSON.stringify({rows:satirlar})}).then(r=>r.json());
+            if(res.ok){ dv.innerHTML='<div class="durum ok">✅ '+res.islenen+' kazanım işlendi.</div>'; listele(); }
+            else dv.innerHTML='<div class="durum hata">Hata: '+(res.error||'')+'</div>';
+        };
+        reader.readAsText(f.files[0],'utf-8');
+    }
+    function csvParse(metin,ayir=';'){
+        const satirlar=metin.replace(/\r/g,'').split('\n').filter(s=>s.trim()!=='');
+        const rows=[];
+        for(const satir of satirlar){
+            const cols=[]; let cur='',inq=false;
+            for(let i=0;i<satir.length;i++){ const c=satir[i];
+                if(inq){ if(c==='"'){ if(satir[i+1]==='"'){cur+='"';i++;} else inq=false;} else cur+=c; }
+                else if(c==='"') inq=true;
+                else if(c===ayir){ cols.push(cur); cur=''; }
+                else cur+=c;
+            }
+            cols.push(cur); rows.push(cols.map(c=>c.replace(/^"|"$/g,'').trim()));
+        }
+        return rows;
+    }
+    if(sessionStorage.getItem('yadm')){ document.getElementById('giris_kutusu').style.display='none'; document.getElementById('panel').style.display='block'; kademeDoldur(); listele(); }
+</script>
+</body>
+</html>
