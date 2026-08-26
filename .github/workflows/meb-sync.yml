@@ -43,12 +43,12 @@ jobs:
       SIL_ESKI_MUFREDAT: "false"
     steps:
       - name: Kodu indir (checkout)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Node kur
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Bağımlılıkları kur
         run: npm ci
