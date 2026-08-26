@@ -1,37 +1,46 @@
 # ============================================================
 # OtoNot — MEB kazanım senkronizasyonu (GitHub Actions)
-# Programlar.aspx'deki envanteri yeniler ve tüm MEB-TYMM
-# derslerinin öğrenme çıktılarını Supabase'e işler.
+# Programlar.aspx'deki envanteri yeniler ve MEB-TYMM derslerinin
+# (yalnızca EN GÜNCEL yıl sürümü) öğrenme çıktılarını Supabase'e işler.
 #
 # Neden GitHub Actions?
-#   MEB'de 535 ders PDF'i vardır; hepsini indirip parse etmek
+#   MEB'de 500+ ders PDF'i vardır; hepsini indirip parse etmek
 #   Vercel'in tek request timeout'u (60s) içine sığmaz.
 #   Bu workflow uzun çalışabilir (6 saate kadar) ve bedelsizdir.
 #
 # Ne zaman?
-#   Varsayılan: HER YIL 1 EKİM saat 04:00 (TR) — yani yılda 1 kez.
-#   MEB genelde öğretim programlarını yaz aylarında yayımlar;
-#   Ekim başı güncel öğretim yılıyla eşleşmesi için idealdir.
+#   HER YIL 1 EKİM saat 04:00 (TR) — yani yılda 1 kez.
+#   MEB yeni öğretim yılını yaz aylarında yayımlar; Ekim başı günceldir.
 #   Cron: "0 1 1 10 *" (1 Ekim, 01:00 UTC = 04:00 TR)
 #
 # Kurulum:
 #   Repo -> Settings -> Secrets and variables -> Actions -> New secret
 #   SUPABASE_URL=https://xxxx.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY=eyJ...  (secret anahtar)
+#   SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxxx  (gizli anahtar — buraya GERÇEK değer yazma)
+#
+# Eski müfredat (Klasik / TYMM değil) temizliği:
+#   BU SENE 4, 8 ve 12. sınıflarda hâlâ eski müfredat uygulanıyor; o yüzden
+#   eski kayıtlar BİLEREK korunur (collect-meb yalnızca TYMM işler, silmez).
+#   SENEYE tamamen TYMM'ye geçildiğinde Repository variable olarak
+#   SIL_ESKI_MUFREDAT=true ayarla; aşağıdaki adım eski müfredatı siler.
 # ============================================================
 name: MEB Kazanım Senkronu
 on:
   schedule:
     # Cron (UTC): "0 1 1 10 *" = HER YIL 1 EKİM, 01:00 UTC = 04:00 TR
-    # MEB yeni öğretim yılı programlarını genelde yaz aylarında günceller;
-    # Ekim başı güncel sürümle eşleşmesi için idealdir.
     - cron: "0 1 1 10 *"
   workflow_dispatch: {}   # Manuel "Run workflow" butonu da mevcut
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 360
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # BU SENE false (eski müfredat 4,8,12 için korunur).
+      # SENEYE tam TYMM geçişinde true yap -> eski müfredat silinir.
+      SIL_ESKI_MUFREDAT: "false"
     steps:
       - name: Kodu indir (checkout)
         uses: actions/checkout@v4
@@ -45,16 +54,14 @@ jobs:
         run: npm ci
 
       - name: MEB envanterini güncelle
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/sync-meb.js
 
-      - name: Öğrenme çıktılarını Supabase'e işle
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Öğrenme çıktılarını Supabase'e işle (yalnız TYMM + en güncel yıl)
         run: node scripts/collect-meb.js
+
+      - name: Eski müfredatı temizle (seneye tam TYMM geçişinde)
+        if: env.SIL_ESKI_MUFREDAT == 'true'
+        run: node scripts/eski-mufredati-temizle.js
 
       - name: Envanter değişimini commit et (varsa)
         run: |

@@ -44,7 +44,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...service...role...
    npm install
    npm run seed
    ```
-   (Sütun sırası başlık satırından algılanır: `sinif, kategori, ders, kazanim[, puan, unite]`.)
+   (Sütun sırası başlık satırından algılanır: `kademe|sinif, kategori, ders, kazanim[, puan, unite]`.)
 
 ### 4) Deploy
 - Vercel'e GitHub repo'yu bağla. `api/` otomatik serverless function olarak algılanır; `index.html` ana sayfa olur.
@@ -54,32 +54,55 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...service...role...
 
 ## MEB kazanım senkronizasyonu (otomatik)
 
-MEB (`mufredat.meb.gov.tr`) kazanımları API'yle değil, **ders PDF'leri içinde** sunar. Proje iki dosya ile bunu tam otomatik hale getirir:
+MEB (`mufredat.meb.gov.tr`) kazanımları API'yle değil, **ders PDF'leri içinde** sunar. Proje aşağıdaki scriptler ile bunu tam otomatik hale getirir:
 
 | Dosya | İşi |
 |---|---|
-| `scripts/sync-meb.js` | Programlar sayfasını tarar → tüm derslerin PDF adreslerini `data/meb_programlar.json`'a toplar |
-| `scripts/collect-meb.js` | Her PDF'i indirip içindeki **öğrenme çıktılarını** (TYMM formatı) çözer ve **Supabase'e yazar** (upsert) |
-| `.github/workflows/meb-sync.yml` | GitHub Actions: **her yıl 1 Ekim'de otomatik** yukarıdaki iki script'i çalıştırır |
+| `scripts/sync-meb.js` | Programlar sayfasını tarar → derslerin PDF adreslerini `data/meb_programlar.json`'a toplar |
+| `scripts/collect-meb.js` | Her PDF'i indirip içindeki **öğrenme çıktılarını** çözer ve **şablona göre Supabase'e yazar** (upsert) |
+| `scripts/eski-mufredati-temizle.js` | Eski (Klasik/TYMM olmayan) müfredatı siler — **seneye tam TYMM geçişinde** çalıştırılır |
+| `.github/workflows/meb-sync.yml` | GitHub Actions: **her yıl 1 Ekim'de otomatik** yukarıdaki scriptleri çalıştırır |
+
+### Öğrenme çıktıları şablonu (collect-meb çıktısı)
+Her satır şu sütunlarla DB'ye yazılır (`kazanimlar` tablosu):
+
+| Şablon sütunu | DB sütunu | İçerik |
+|---|---|---|
+| **kademe** | `sinif` | İlkokul / Ortaokul / İHO / Lise / Spor Lisesi / Güzel Sanatlar Lisesi / Meslek Lisesi |
+| **kategori** | `kategori` | Ortak Ders \| Seçmeli Ders |
+| **ders** | `ders` | PDF'deki dersin temiz adı (ör. "Din Kültürü ve Ahlak Bilgisi") |
+| **unite** | `unite` | "9. Sınıf 1. Tema: YAŞAM" / "4. Sınıf 1. Ünite: GÜNLÜK HAYAT VE DİN" |
+| **kazanim** | `kazanim` | Kod + ana öğrenme çıktısı (ör. "BİY.9.1.1 Biyolojideki dönüm noktalarını ... sorgulayabilme") |
+| **puan** | `puan_varsayilan` | 10 |
+
+> **TYMM notu:** Yeni müfredatta bölüm adı bazı derslerde "**tema**" (ör. Lise Biyoloji `BİY.9.1.1`), bazılarında "**ünite**"dir (ör. İlkokul DKAB `DKAB.4.1.1`). Kazanım kodu biçimi `<DERS>.<sınıf>.<tema|ünite>.<çıktı>` olup ünite adı PDF'ten çıkarılır. "Bu …" açıklaması olmayan bazı derslerde ünite adı boş kalabilir (sınıf+ünite numarası yine doğrudur).
+
+### Seçim kuralları
+- **Yalnızca TYMM** işlenir (`kademe === "TYMM"`). "TYMM" geçmeyen programlar **eski müfredattır**.
+- Aynı dersin **2024 / 2026** gibi birden çok yıl sürümü varsa **EN GÜNCEL yıl** seçilir ve sadece o işlenir.
+- Kullanıcının 7 kademesine uymayan gruplar (Özel Eğitim, Müzik Okulları, Spor Ortaokulları) `data/sinif_raporu.json` içine raporlanır, DB'ye yazılmaz (elle eşlenebilir).
+
+### Eski müfredat ne zaman silinir?
+- **Bu sene (2026):** 4, 8 ve 12. sınıflarda eski müfredat hâlâ uygulanıyor; o yüzden eski (`kaynak='MEB'`) kayıtlar **bırakılır**, collect-meb yalnızca TYMM ekler, silmez.
+- **Seneye (tamamen TYMM'ye geçilince):** GitHub Actions'ta `SIL_ESKI_MUFREDAT=true` yap → `eski-mufredati-temizle.js` çalışıp eski müfredatı siler.
 
 ### Nasıl çalışır (elle) teste
 ```bash
 npm install
 node scripts/sync-meb.js        # envanter güncelle
-node scripts/collect-meb.js --ders MANTIK   # sadece Mantık (test)
-node scripts/collect-meb.js     # TÜM dersler
+node scripts/collect-meb.js --ders BIYOLOJI   # sadece Biyoloji (test)
+node scripts/collect-meb.js     # TÜM TYMM dersler
+node scripts/eski-mufredati-temizle.js --dry  # eski müfredat sayımı (silmez)
 ```
 
 ### Otomatik (yılda 1 kez — 1 Ekim)
-MEB'in PDF'lerini indirip parse etmek 535 ders için uzun sürer ve **Vercel'in 60sn timeout'una sığmaz**. Bu yüzden asıl otomasyon **GitHub Actions** ile yapılır (bedava, bir saate kadar çalışabilir):
+MEB'in PDF'lerini indirip parse etmek yüzlerce ders için uzun sürer ve **Vercel'in 60sn timeout'una sığmaz**. Bu yüzden asıl otomasyon **GitHub Actions** ile yapılır (bedava, uzun süre çalışabilir):
 
 1. GitHub'da repo → **Settings → Secrets and variables → Actions → New repository secret**:
    - `SUPABASE_URL` = `https://xxxx.supabase.co`
    - `SUPABASE_SERVICE_ROLE_KEY` = gizli anahtar
 2. Workflow (`meb-sync.yml`) **her yıl 1 Ekim saat 04:00 TR** otomatik çalışır (cron `0 1 1 10 *`).
 3. İstersen **Actions sekmesinden "Run workflow"** butonuna basarak istediğin zaman elle de tetikleyebilirsin.
-
-> **Not:** Yeni MEB-TYMM (2026) formatı mükemmel çözülür; eski/geçiş dönemi formatlar (`I, II ve III. Kademeler`, klasik lise) farklı yapıda olduğundan bazı derslerde öğrenme çıktısı bulunamayabilir. Bu sınır bilinerek kullanılmalıdır.
 
 ### Vercel tarafı (opsiyonel, manuel)
 - `api/kazanimlar.js` ön uca veri sağlar (asıl işlev).
@@ -103,8 +126,8 @@ Uygulamanın **"Admin"** sekmesinde kazanım havuzunu Excel şablonu ile kendin 
 ### Nasıl kullanılır
 1. **Admin** sekmesine tıkla → admin anahtarını gir (Vercel'de `ADMIN_KEY` env'iyle tanımlı).
 2. **"Kazanım Şablonu İndir (CSV)"** → Excel'de doldur.
-3. Sütunlar: `sinif; kategori; ders; unite; kazanim; puan_varsayilan; kaynak; kaynak_url`
-   - Zorunlu: `ders`, `kazanim`, `sinif`
+3. Sütunlar: `kademe; kategori; ders; unite; kazanim; puan_varsayilan; kaynak; kaynak_url`
+   - Zorunlu: `kademe`, `ders`, `kazanim`
 4. Doldurduğun CSV'yi yükle → kazanımlar Supabase'e işlenir (tekrar edenler güncellenir).
 5. **"Kazanımları Listele"** ile mevcut veriyi gör.
 

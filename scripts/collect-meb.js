@@ -1,14 +1,26 @@
 // ============================================================
 // OtoNot — scripts/collect-meb.js
-// data/meb_programlar.json'daki MEB programlarını okuyup her
-// dersin PDF'ini indirir, içinden öğrenme çıktılarını çözer ve
-// Supabase'e yazar. Github Actions cron / Vercel ile ayda 1-2 veya
-// yılda 1 otomatik koşturulur.
+// data/meb_programlar.json'daki MEB programlarını okuyup her TYMM
+// dersin (yalnızca en güncel yıl sürümü) PDF'ini indirir, öğrenme
+// çıktılarını çözer ve şablona göre Supabase'e yazar (upsert).
+//
+// ŞABLON:  kademe; kategori; ders; unite; kazanim; puan
+//   DB'ye: sinif(kademe); kategori; ders; unite; kazanim; puan_varsayilan
+//
+// Kural özeti:
+//   - Yalnızca TYMM müfredatı işlenir (eski "Klasik" müfredat bu sene
+//     4, 8 ve 12. sınıflar için bilerek dokunulmadan bırakılır).
+//   - Aynı dersin 2024 / 2026 gibi birden çok yıl sürümü varsa EN GÜNCELİ seçilir.
+//   - kademe  = İlkokul | Ortaokul | İHO | Lise | Spor Lisesi |
+//               Güzel Sanatlar Lisesi | Meslek Lisesi
+//   - kategori= Ortak Ders | Seçmeli Ders
+//   - unite   = "9. Sınıf 1. Tema: YAŞAM" (TYMM'de tema, bazı derslerde ünite)
+//   - kazanim = kod + ana öğrenme çıktısı metni (süreç bileşenleri hariç)
 //
 // Kullanım:
-//   node scripts/collect-meb.js                 // tüm dersler
-//   node scripts/collect-meb.js --limit 3       // ilk 3 ders (test)
-//   node scripts/collect-meb.js --ders MANTIK   // adında "MANTIK" olan
+//   node scripts/collect-meb.js               // tüm TYMM dersleri
+//   node scripts/collect-meb.js --limit 3     // ilk 3 ders (test)
+//   node scripts/collect-meb.js --ders BIYOLOJI
 // ============================================================
 
 import { createClient } from "@supabase/supabase-js";
@@ -19,9 +31,12 @@ import { dirname } from "node:path";
 import {
   parseOgrenmeCiktilari,
   pdfiIndirAndCikar,
-  sinifAraligi,
-  sinifAraligaUygun,
+  enGuncelProgramlari,
+  kademeBelirle,
+  kategoriBelirle,
   dersAdiTemizle,
+  sinifAraligaUygun,
+  kazanimHash,
 } from "./meb-lib.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -65,76 +80,109 @@ async function main() {
   }
   const programs = JSON.parse(readFileSync(invPath, "utf8"));
 
+  // Yalnızca TYMM + en güncel yıl sürümlerini seç (eski Klasik dahil edilmez)
+  const { dersler, atlanan } = enGuncelProgramlari(programs);
+  const hedef = dersler
+    .filter((p) => !dersFiltre || p.ders.toUpperCase().includes(dersFiltre))
+    .slice(0, limit);
+
   const supabase = createClient(url, key);
-  const hedef = programs.filter((p) => p.pdf && (!dersFiltre || p.ders.toUpperCase().includes(dersFiltre))).slice(0, limit);
+  console.log(`${hedef.length} TYMM ders işlenecek (en güncel yıl; ${atlanan.length} eski yıl sürümü atlandı).`);
 
-  console.log(`${hedef.length} ders işlenecek.`);
-  let toplamEklendi = 0, hata = 0;
-  const rapor = [];               // sınıfı belirlenemeyen / şüpheli dersler
+  const durum = { toplam: 0, rapor_hatali: [] };
+  const rapor = { kademeYok: [], sınıfSorunlu: [], ciktisiz: [], hatali: durum.rapor_hatali };
 
-  for (const p of hedef) {
-    try {
-      const metin = await pdfiIndirAndCikar(p.pdf);
-      const ocler = parseOgrenmeCiktilari(metin);
-      if (ocler.length === 0) {
-        console.log(`  ${p.ders}: öğrenme çıktısı bulunamadı (format farklı olabilir).`);
-        continue;
-      }
-      const dersAdi = dersAdiTemizle(p.ders) || p.ders;
-      const kategori = p.kategori || (p.kademe === "TYMM" ? "MEB-TYMM" : "MEB");
-
-      // Sınıf belirleme: kodun ilk sayısal parçası sınıf adayıdır.
-      // Dersin kademe aralığına uyuyorsa TEK sınıf olarak kullanılır;
-      // uymuyorsa (ör. MBU'da ilk sayı tema) "SINIF?" işaretlenip rapora yazılır.
-      const dersSiniflari = new Set();
-      ocler.forEach((o) => {
-        if (o.sayilar && o.sayilar.length > 0) dersSiniflari.add(parseInt(o.sayilar[0], 10));
-      });
-
-      // Tüm öğrenme çıktıları aynı tek sınıfa mı işaret ediyor + ders aralığına uyuyor mu?
-      let sinif = "SINIF?";
-      if (dersSiniflari.size === 1) {
-        const aday = [...dersSiniflari][0];
-        if (sinifAraligaUygun(p.ders, aday)) sinif = String(aday);
-      }
-
-      // SINIF? olanlar rapora eklenir (yine de normalize sınıf değeri ile yazılır)
-      if (sinif === "SINIF?") {
-        rapor.push({ ders: p.ders, kategori, aralik: sinifAraligi(p.ders) || [], ciktiSayisi: ocler.length, kodlar: [...ocler].slice(0, 3).map((o) => o.kod) });
-      }
-
-      const rows = ocler.map((o) => ({
-        // Tek sınıf değeri yaz; belirsizse koddan adayı dene, olmazsa SINIF? -> sonradan düzenlenir
-        sinif,
-        kategori,
-        ders: dersAdi,
-        unite: `${o.uniteNo}. Ünite`,
-        kazanim: `${o.kod} ${o.baslik}`.trim(),
-        puan_varsayilan: 10,
-        kaynak: p.kademe === "TYMM" ? "MEB-TYMM" : "MEB",
-        kaynak_url: p.pdf,
-      }));
-
-      // upsert: aynı sinif+kategori+ders+unite+kazanim tekrar eklenmez
-      const { error } = await supabase
-        .from("kazanimlar")
-        .upsert(rows, { onConflict: "sinif,kategori,ders,unite,kazanim", ignoreDuplicates: true });
-      if (error) throw new Error(error.message);
-
-      toplamEklendi += rows.length;
-      console.log(`  [OK] ${p.ders}: ${rows.length} kazanım (sınıf=${sinif}) -> toplam ${toplamEklendi}`);
-    } catch (e) {
-      hata++;
-      console.error(`  [HATA] ${p.ders}: ${e.message}`);
+  // Tek ders işleyicisi (paralel çalıştırılabilir; durum/rapor ortak ve mutasyona açık)
+  async function dersIslet(p) {
+    let sinifBelirsiz = false;
+    const metin = await pdfiIndirAndCikar(p.pdf);
+    const oc = parseOgrenmeCiktilari(metin);
+    if (oc.length === 0) {
+      rapor.ciktisiz.push({ ders: p.ders, kategori: p.kategori });
+      console.log(`  ${p.ders}: öğrenme çıktısı bulunamadı (format farklı).`);
+      return;
     }
+
+    const kategori = kategoriBelirle(p);
+    const dersAdi = dersAdiTemizle(p.ders) || p.ders;
+
+    const rows = oc
+      .map((o) => {
+        const kademe = kademeBelirle(p, o.sinif);
+        if (!kademe) {
+          if (!sinifBelirsiz) {
+            sinifBelirsiz = true;
+            rapor.kademeYok.push({ ders: p.ders, kategori: p.kategori, yil: p.ders.match(/\((\d{4})\)/)?.[1] || "" });
+          }
+          return null;
+        }
+        const kaz = `${o.kod} ${o.baslik}`.trim();
+        if (!sinifAraligaUygun(p.ders, o.sinif)) {
+          rapor.sınıfSorunlu.push({ ders: p.ders, kod: o.kod, sinif: o.sinif });
+        }
+        return {
+          sinif: kademe,                 // "kademe" sütunu
+          kazanim_hash: kazanimHash(o.kod, o.baslik),
+          kategori,                      // Ortak Ders | Seçmeli Ders
+          ders: dersAdi,                 // "ders" sütunu (temiz ad)
+          unite: o.unite,                // "Sınıf X Tema/Ünite Y: Ad"
+          kazanim: kaz,                  // "kazanim" sütunu (kod + ana çıktı)
+          puan_varsayilan: 10,           // "puan" sütunu
+          kaynak: "MEB-TYMM",
+          kaynak_url: p.pdf,
+        };
+      })
+      .filter(Boolean);
+
+    if (rows.length === 0) {
+      console.log(`  [KADEME?] ${p.ders} -> 7 kademeye eşlenemedi (atlandı)`);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("kazanimlar")
+      .upsert(rows, { onConflict: "sinif,kategori,ders,unite,kazanim_hash", ignoreDuplicates: false });
+    if (error) throw new Error(error.message);
+
+    durum.toplam += rows.length;
+    console.log(`  [OK] ${dersAdi} (${rows[0].sinif}): ${rows.length} kazanım -> toplam ${durum.toplam}`);
   }
 
-  // Rapor dosyası yaz
+  // Kuyruk: aynı anda en fazla ES ders işlenir (paralel indirme + parse)
+  const ES = 4;
+  let aktif = 0;
+  let sira = 0;
+  await new Promise((resolve) => {
+    const planla = () => {
+      while (aktif < ES && sira < hedef.length) {
+        const p = hedef[sira++];
+        aktif++;
+        dersIslet(p)
+          .catch((e) => {
+            rapor.hatali.push({ ders: p.ders, hata: String(e.message) });
+            console.error(`  [HATA] ${p.ders}: ${e.message}`);
+          })
+          .finally(() => {
+            aktif--;
+            planla();
+          });
+      }
+      if (sira >= hedef.length && aktif === 0) resolve();
+    };
+    planla();
+  });
+
+  const toplamEklendi = durum.toplam;
+
   const raporPath = path.join(rootDir, "data", "sinif_raporu.json");
   writeFileSync(raporPath, JSON.stringify(rapor, null, 2), "utf8");
 
-  console.log(`\nBitti. Eklenen kazanım: ${toplamEklendi}, hatalı ders: ${hata}, SINIF? ders sayısı: ${rapor.length}`);
-  console.log(`Sınıf raporu: ${raporPath}  (SINIF? olan dersler burada listelenmiştir; sınıf değerlerini buna göre düzenleyebilirsin)`);
+  console.log(
+    `\nBitti. Eklenen/güncellenen kazanım: ${toplamEklendi}` +
+      ` | kademeYok: ${rapor.kademeYok.length} | sınıfSorunlu: ${rapor.sınıfSorunlu.length}` +
+      ` | ciktisiz: ${rapor.ciktisiz.length} | hatali: ${rapor.hatali.length}`
+  );
+  console.log(`Ayrıntı raporu: ${raporPath}`);
 }
 
 main().catch((e) => {

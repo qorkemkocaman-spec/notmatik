@@ -74,14 +74,13 @@ function parseDelimited(text) {
 function detectColumns(rows) {
   const header = rows[0].map((h) => h.toLowerCase().trim());
   const isHeader = header.some((h) =>
-    ["sinif", "sınıf", "kategori", "ders", "kazanim", "kazanım", "unite", "ünite", "puan"].includes(h)
+    ["kademe", "sinif", "sınıf", "kategori", "ders", "kazanim", "kazanım", "unite", "ünite", "puan"].includes(h)
   );
   if (!isHeader) return { cols: { sinif:0, kategori:1, ders:2, kazanim:3, puan:4, unite:-1 }, hasHeader: isHeader };
 
   const idx = { sinif:-1, kategori:-1, ders:-1, kazanim:-1, puan:-1, unite:-1 };
   header.forEach((h, i) => {
-    if (h.startsWith("sinif")) idx.sinif = i;
-    else if (h.startsWith("sınıf")) idx.sinif = i;
+    if (h.startsWith("kademe") || h.startsWith("sinif") || h.startsWith("sınıf")) idx.sinif = i;
     else if (h.startsWith("kategori")) idx.kategori = i;
     else if (h.startsWith("ders")) idx.ders = i;
     else if (h.startsWith("kazan")) idx.kazanim = i;
