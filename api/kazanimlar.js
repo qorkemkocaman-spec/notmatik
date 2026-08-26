@@ -56,6 +56,32 @@ function kazanimSira(a, b) {
   return 0;
 }
 
+// Supabase/PostgREST tek sorguda 1000 kaydı sınırlayabildiğinden,
+// filtrelere uyan TÜM kayıtları sayfa sayfa çekip birleştirir.
+async function tumuGetir(supabase, filtre) {
+  const BATCH = 1000;
+  const tum = [];
+  let from = 0;
+  for (;;) {
+    let q = supabase
+      .from("kazanimlar")
+      .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url")
+      .range(from, from + BATCH - 1);
+    if (filtre.kademe) q = q.eq("sinif", filtre.kademe);
+    if (filtre.kategori) q = q.eq("kategori", filtre.kategori);
+    if (filtre.ders) q = q.eq("ders", filtre.ders);
+    if (filtre.unite) q = q.eq("unite", filtre.unite);
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    const donen = data || [];
+    tum.push(...donen);
+    // Sayfa dolmadıysa tüm kayıtlar geldi demektir, döngüyü bitir.
+    if (donen.length < BATCH) break;
+    from += BATCH;
+  }
+  return tum;
+}
+
 export default async function handler(req, res) {
   // Sadece GET
   if (req.method !== "GET") {
@@ -74,23 +100,13 @@ export default async function handler(req, res) {
 
     // Filtreler: /api/kazanimlar?kademe=Ortaokul&kategori=Ortak Ders&ders=Matematik
     // kademe -> sinif sütununda saklanır (İlkokul, Ortaokul, İHO, Lise, Spor Lisesi, Güzel Sanatlar, Meslek Lisesi)
-    const { kademe, kategori, ders } = req.query;
+    const { kademe, kategori, ders, unite } = req.query;
 
-    let q = supabase
-      .from("kazanimlar")
-      .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url");
-
-    if (kademe) q = q.eq("sinif", kademe);
-    if (kategori) q = q.eq("kategori", kategori);
-    if (ders) q = q.eq("ders", ders);
-
-    const { data, error } = await q;
-    if (error) {
-      throw new Error(error.message);
-    }
+    // Filtrelere uyan tüm kayıtları sayfa sayfa çek
+    const data = await tumuGetir(supabase, { kademe, kategori, ders, unite });
 
     // Kademe -> kategori -> ders -> ünite -> kazanım (doğal) sıralaması
-    const sirali = (data || []).slice().sort(kazanimSira);
+    const sirali = data.slice().sort(kazanimSira);
 
     // kademe adıyla döndür (ön uç için)
     const sonuc = sirali.map((r) => ({ ...r, kademe: r.sinif }));

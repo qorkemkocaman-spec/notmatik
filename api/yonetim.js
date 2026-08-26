@@ -55,6 +55,31 @@ function kazanimSira(a, b) {
   return 0;
 }
 
+// Supabase/PostgREST tek sorguda 1000 kaydı sınırlayabildiğinden,
+// filtrelere uyan tüm kayıtları sayfa sayfa çekip birleştirir.
+async function tumuGetir(supabase, filtre) {
+  const BATCH = 1000;
+  const tum = [];
+  let from = 0;
+  for (;;) {
+    let q = supabase
+      .from("kazanimlar")
+      .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url")
+      .range(from, from + BATCH - 1);
+    if (filtre.kademe) q = q.eq("sinif", filtre.kademe);
+    if (filtre.kategori) q = q.eq("kategori", filtre.kategori);
+    if (filtre.ders) q = q.eq("ders", filtre.ders);
+    if (filtre.unite) q = q.eq("unite", filtre.unite);
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    const donen = data || [];
+    tum.push(...donen);
+    if (donen.length < BATCH) break;
+    from += BATCH;
+  }
+  return tum;
+}
+
 export default async function handler(req, res) {
   // Admin yetkisi
   const gelen = req.headers["x-admin-key"];
@@ -70,16 +95,8 @@ export default async function handler(req, res) {
     // ---------------- LISTELE ----------------
     if (method === "GET") {
       const { kademe, kategori, ders, unite } = req.query;
-      let q = supabase
-        .from("kazanimlar")
-        .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url");
-      if (kademe) q = q.eq("sinif", kademe);
-      if (kategori) q = q.eq("kategori", kategori);
-      if (ders) q = q.eq("ders", ders);
-      if (unite) q = q.eq("unite", unite);
-      const { data, error } = await q;
-      if (error) throw new Error(error.message);
-      const sirali = (data || []).slice().sort(kazanimSira);
+      const data = await tumuGetir(supabase, { kademe, kategori, ders, unite });
+      const sirali = data.slice().sort(kazanimSira);
       return res.status(200).json({ data: sirali.map((r) => ({ ...r, kademe: r.sinif })) });
     }
 
@@ -124,28 +141,33 @@ export default async function handler(req, res) {
     // ---------------- SİL ----------------
     if (method === "DELETE") {
       const id = req.query.id || (body && body.id);
-      let q = supabase.from("kazanimlar").delete();
 
       if (id) {
         // Tekli silme
-        q = q.eq("id", id);
-      } else {
-        // Toplu silme: filtreler query'den gelir
-        const { kademe, kategori, ders, unite } = req.query;
-        if (ders) q = q.eq("ders", ders);
-        if (kademe) q = q.eq("sinif", kademe);
-        if (kategori) q = q.eq("kategori", kategori);
-        if (unite) q = q.eq("unite", unite);
-
-        // Güvenlik: en az bir filtre zorunlu (tüm tabloyu silme riskine karşı)
-        if (!ders && !kademe && !kategori && !unite) {
-          return res.status(400).json({ error: "Silme için id veya en az bir filtre (ders, kademe, kategori, unite) gerekli." });
-        }
+        const { error } = await supabase.from("kazanimlar").delete().eq("id", id);
+        if (error) throw new Error(error.message);
+        return res.status(200).json({ ok: true, silinen: 1 });
       }
 
-      const { data, error } = await q.select("id");
-      if (error) throw new Error(error.message);
-      return res.status(200).json({ ok: true, silinen: (data || []).length });
+      // Toplu silme: filtreler query'den gelir
+      const { kademe, kategori, ders, unite } = req.query;
+      if (!ders && !kademe && !kategori && !unite) {
+        return res.status(400).json({ error: "Silme için id veya en az bir filtre (ders, kademe, kategori, unite) gerekli." });
+      }
+
+      // Filtreye uyan tüm kayıtların id'lerini sayfa sayfa topla (1000 sınırını aşmak için)
+      const satirlar = await tumuGetir(supabase, { kademe, kategori, ders, unite });
+      const ids = satirlar.map((r) => r.id);
+
+      let silinen = 0;
+      const BATCH = 1000;
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const chunk = ids.slice(i, i + BATCH);
+        const { error } = await supabase.from("kazanimlar").delete().in("id", chunk);
+        if (error) throw new Error(error.message);
+        silinen += chunk.length;
+      }
+      return res.status(200).json({ ok: true, silinen });
     }
 
     res.setHeader("Allow", "GET,POST,PUT,DELETE");
