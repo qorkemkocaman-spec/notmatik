@@ -96,3 +96,21 @@ npx vercel dev        # /api/kazanimlar lokal çalışır; index.html sunulur
 - Kazanım havuzu artık Google Sheets değil, Supabase'den beslenir.
 - `MAX_SORU` / `MAX_OGRENCI` sabitleri yapılandırılabilir hale getirilebilir (gelecekte).
 - MEB sayfası form tabanlı (ASPNET) ama program linkleri statik `ProgramDetay.aspx?PID=` olduğundan taranması basit.
+
+## 🔐 Admin Paneli (Kazanım Yönetimi)
+Uygulamanın **"Admin"** sekmesinde kazanım havuzunu Excel şablonu ile kendin yönetebilirsin.
+
+### Nasıl kullanılır
+1. **Admin** sekmesine tıkla → admin anahtarını gir (Vercel'de `ADMIN_KEY` env'iyle tanımlı).
+2. **"Kazanım Şablonu İndir (CSV)"** → Excel'de doldur.
+3. Sütunlar: `sinif; kategori; ders; unite; kazanim; puan_varsayilan; kaynak; kaynak_url`
+   - Zorunlu: `ders`, `kazanim`, `sinif`
+4. Doldurduğun CSV'yi yükle → kazanımlar Supabase'e işlenir (tekrar edenler güncellenir).
+5. **"Kazanımları Listele"** ile mevcut veriyi gör.
+
+### Kurulum (admin anahtarı)
+1. Vercel → proje → **Environment Variables** → `ADMIN_KEY=<güçlü-değer>` ekle.
+2. (Lokal test için `.env` içine `ADMIN_KEY=...` yaz.)
+3. Admin sayfasında bu anahtarı girerek paneli açarsın.
+
+> 🔒 **Güvenlik:** Admin anahtarını kimseyle paylaşma; kod içine yazma (yalnızca Vercel env'inde sakla). Kazanım yazma/okuma işlemleri sunucu tarafı API'lerden (`api/admin-yukle.js`, `api/admin-dogrula.js`) yapılır.

@@ -1,11 +1,24 @@
-node_modules/
+﻿node_modules/
 .env
 .env.local
 .vercel/
 *.log
 
-# MEB test artıkları (indirilen PDF/geçici metinler)
+# MEB test/veri artiklari
 data/*.pdf
 data/*_metin.txt
+data/cizelgeler/
+data/cizelge_*.txt
+data/cizelge_listesi.json
+data/*.csv
+data/sinif_raporu.json
+*.pdf
+*.txt
+scripts/launch-collect.ps1
+scripts/run-collect.cjs
+scripts/cizelge-topla.mjs
+scripts/cizelge-ders-cikar.mjs
+scripts/onecek-sablon.mjs
+
 .vercel
 .env*

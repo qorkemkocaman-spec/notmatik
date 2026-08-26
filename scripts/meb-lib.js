@@ -5,17 +5,24 @@
 // ============================================================
 import { readFileSync } from "node:fs";
 
-// Ders adından sınıf aralığını bul: "(1-4)", "(5-8)", "(9-12)" gibi
-export function sinifFromDersAdi(dersAdi) {
-  const m = dersAdi.match(/\((\d+\s*-\s*\d+)\)/);
-  if (m) return m[1].replace(/\s+/g, "");
-  // Sınıf aralığı verilmemişse genel kademe etiketi
-  if (/ORTAÖĞRETİM|LİSE/i.test(dersAdi)) return "9-12";
-  if (/TEMEL EĞİTİM/i.test(dersAdi)) return "1-8";
-  if (/ORTAOKUL/i.test(dersAdi)) return "5-8";
-  if (/İLKOKUL/i.test(dersAdi)) return "1-4";
-  if (/OKUL ÖNCESİ/i.test(dersAdi)) return "0";
-  return "";
+// Ders adından sınıf ARALIĞINI bul: "(1-4)", "(5-8)", "(9-12)" gibi.
+// Not: bu yalnızca GEÇERLİ değerleri doğrulamak için kullanılır; veriye
+// aralık değil TEK değer yazılır.
+export function sinifAraligi(dersAdi) {
+  const m = dersAdi.match(/\((\d+)\s*-\s*(\d+)\)/);
+  if (m) return [parseInt(m[1], 10), parseInt(m[2], 10)];
+  if (/ORTAÖĞRETİM|LİSE|İMAM HATİP/i.test(dersAdi)) return [9, 12];
+  if (/ORTAOKUL/i.test(dersAdi)) return [5, 8];
+  if (/İLKOKUL/i.test(dersAdi)) return [1, 4];
+  if (/OKUL ÖNCESİ/i.test(dersAdi)) return [0, 0];
+  if (/TEMEL EĞİTİM/i.test(dersAdi)) return [1, 8];
+  return null;
+}
+
+// Ders için verilen bir sınıf değerinin geçerli olup olmadığını kontrol et
+export function sinifAraligaUygun(dersAdi, sinif) {
+  const ar = sinifAraligi(dersAdi);
+  return !ar || (sinif >= ar[0] && sinif <= ar[1]);
 }
 
 // Ders adını temizle: kademe/parantez artıklarını at, okunaklı bırak.
@@ -37,39 +44,49 @@ export function dersAdiTemizle(dersAdi) {
   return d.trim();
 }
 
-// Bir metindeki öğrenme çıktısı kodlarını ve başlıklarını çıkar.
-// TYMM formatı:  KISALTMA.UNITE.ÇIKTI  ->  MAN.1.1. Mantığı ... sorgulayabilme
+// Bir metindeki öğrenme çıktısı / kazanım kodlarını ve başlıklarını çıkar.
+//
+// Kod formu (çok parçalı kısaltma + 3 sayı):
+//   YENİ (TYMM):  MBU.MU.1.1.1. Günlük hayatta ... toplayabilme   ("-ebilme/-abilme")
+//   ESKİ:         MBU.MU 1.1.1. Evde ... örnekler verir.          (geniş zaman fiili)
+// Süreç bileşenleri (a) b) c) ...) HİÇBİRİNE dahil edilmez.
 export function parseOgrenmeCiktilari(text) {
-  // PDF'te " | " hücre ayırıcıları ve " - " kırılımları vardır; düz metne çevir
+  // PDF'te " | " hücre ayırıcıları ve kırılımlar vardır; düz metne çevir
   const flat = text
     .replace(/\s*\|/g, " ")
     .replace(/\|\s*/g, " ")
     .replace(/\s+/g, " ");
 
+  // Kod: 1-5 harflik parçalardan oluşan kısaltma (nokta ile ayrılmış), sonra 2-4 sayısal parça.
+  // Ör: MBU.MU.1.1.1. (3)  |  MAN.1.1. (2)  |  TAR.9.1.1. (3)
+  const kodRe = /(?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\./;
+  const re = /((?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.)\s*([A-Za-zÀ-ž0-9ÇĞİÖŞÜçğıöşüÂâÎîÛû].{0,300}?)(?=\s+(?:(?:[abcçdefgğhıijklmnoöprsştuüvyz])\s*\)\s|(?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.|İÇERİK ÇERÇEVESİ|ÖĞRENME ÖĞRETME UYGULAMALARI)|$)/g;
+
   const result = [];
   const seen = new Set();
-  // Kod: 2-5 büyük harf, sonra ünite no, çıktı no (örn. MAN.1.1.)
-  const kodRe = /[A-ZÇĞİÖŞÜ]{2,5}\.\d{1,2}\.\d{1,2}\./;
-  const re = /([A-ZÇĞİÖŞÜ]{2,5}\.\d{1,2}\.\d{1,2}\.)\s*([A-Za-zÇĞİÖŞÜçğıöşü].{0,260}?)(?=\s+[A-ZÇĞİÖŞÜ]{2,5}\.\d{1,2}\.\d{1,2}\.|$)/g;
   let m;
   while ((m = re.exec(flat)) !== null) {
-    const kod = m[1];
+    const kod = m[1].replace(/\.$/, "");
     if (seen.has(kod)) continue;
     seen.add(kod);
     let baslik = m[2].replace(/\s+/g, " ").trim();
-    // İlk "a) " / "a ) " alt maddesinde ve açıklayıcı başlıklarda kes
-    baslik = baslik.split(/\s+[abcçğ]\s*\)\s/)[0].trim();
+    // Süreç bileşeni başlangıcını temizle (a) b) c) ...)
+    baslik = baslik.split(/\s+[abcçdefgğhıijklmnoöprsştuüvyz]\s*\)\s/)[0].trim();
     baslik = baslik.split(/İÇERİK ÇERÇEVESİ/)[0].trim();
     baslik = baslik.split(/ÖĞRENME ÖĞRETME UYGULAMALARI/)[0].trim();
-    if (!baslik || baslik.length < 8) continue;
-    // Başlık içinde ikinci bir öğrenme çıktısı kodu kalırsa orada da kes
+    baslik = baslik.split(/ÖĞRENME KANITLARI/)[0].trim();
+    // Başlık içinde ikinci bir kod kalırsa orada kes
     const ekKod = baslik.search(kodRe);
     if (ekKod > 0) baslik = baslik.slice(0, ekKod).trim();
-    if (!baslik) continue;
-    // Ünite numarası: kod MAN.1.1 -> 1
-    const parca = kod.split(".");
-    const uniteNo = parca[1];
-    result.push({ kod: kod.replace(/\.$/, ""), uniteNo, baslik });
+    if (!baslik || baslik.length < 6) continue;
+
+    // Kod sayıları: MBU.MU.1.1.1 -> [MBU,MU,1,1,1]
+    const parts = kod.split(".");
+    // Sayısal parçalar (son 3): [tema, s1, s2] ; sınıf adayı = ilk sayısal parça
+    const sayilar = parts.filter((p) => /^\d+$/.test(p));
+    // TYMM: MBU.MU.1.1.1 -> sayilar = [1,1,1]; ünite = ilk sayı
+    const uniteNo = sayilar[0] || "1";
+    result.push({ kod, uniteNo, baslik, sayilar });
   }
   return result;
 }

@@ -12,14 +12,15 @@
 // ============================================================
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import {
   parseOgrenmeCiktilari,
   pdfiIndirAndCikar,
-  sinifFromDersAdi,
+  sinifAraligi,
+  sinifAraligaUygun,
   dersAdiTemizle,
 } from "./meb-lib.js";
 
@@ -69,6 +70,7 @@ async function main() {
 
   console.log(`${hedef.length} ders işlenecek.`);
   let toplamEklendi = 0, hata = 0;
+  const rapor = [];               // sınıfı belirlenemeyen / şüpheli dersler
 
   for (const p of hedef) {
     try {
@@ -78,12 +80,33 @@ async function main() {
         console.log(`  ${p.ders}: öğrenme çıktısı bulunamadı (format farklı olabilir).`);
         continue;
       }
-      const sinif = sinifFromDersAdi(p.ders);
       const dersAdi = dersAdiTemizle(p.ders) || p.ders;
+      const kategori = p.kategori || (p.kademe === "TYMM" ? "MEB-TYMM" : "MEB");
+
+      // Sınıf belirleme: kodun ilk sayısal parçası sınıf adayıdır.
+      // Dersin kademe aralığına uyuyorsa TEK sınıf olarak kullanılır;
+      // uymuyorsa (ör. MBU'da ilk sayı tema) "SINIF?" işaretlenip rapora yazılır.
+      const dersSiniflari = new Set();
+      ocler.forEach((o) => {
+        if (o.sayilar && o.sayilar.length > 0) dersSiniflari.add(parseInt(o.sayilar[0], 10));
+      });
+
+      // Tüm öğrenme çıktıları aynı tek sınıfa mı işaret ediyor + ders aralığına uyuyor mu?
+      let sinif = "SINIF?";
+      if (dersSiniflari.size === 1) {
+        const aday = [...dersSiniflari][0];
+        if (sinifAraligaUygun(p.ders, aday)) sinif = String(aday);
+      }
+
+      // SINIF? olanlar rapora eklenir (yine de normalize sınıf değeri ile yazılır)
+      if (sinif === "SINIF?") {
+        rapor.push({ ders: p.ders, kategori, aralik: sinifAraligi(p.ders) || [], ciktiSayisi: ocler.length, kodlar: [...ocler].slice(0, 3).map((o) => o.kod) });
+      }
 
       const rows = ocler.map((o) => ({
-        sinif: sinif || "0",
-        kategori: p.kademe === "TYMM" ? "MEB-TYMM" : "MEB",
+        // Tek sınıf değeri yaz; belirsizse koddan adayı dene, olmazsa SINIF? -> sonradan düzenlenir
+        sinif,
+        kategori,
         ders: dersAdi,
         unite: `${o.uniteNo}. Ünite`,
         kazanim: `${o.kod} ${o.baslik}`.trim(),
@@ -99,14 +122,19 @@ async function main() {
       if (error) throw new Error(error.message);
 
       toplamEklendi += rows.length;
-      console.log(`  [OK] ${p.ders}: ${rows.length} kazanım (${sinif || "sınıf?"}) -> toplam ${toplamEklendi}`);
+      console.log(`  [OK] ${p.ders}: ${rows.length} kazanım (sınıf=${sinif}) -> toplam ${toplamEklendi}`);
     } catch (e) {
       hata++;
       console.error(`  [HATA] ${p.ders}: ${e.message}`);
     }
   }
 
-  console.log(`\nBitti. Eklenen kazanım: ${toplamEklendi}, hatalı ders: ${hata}`);
+  // Rapor dosyası yaz
+  const raporPath = path.join(rootDir, "data", "sinif_raporu.json");
+  writeFileSync(raporPath, JSON.stringify(rapor, null, 2), "utf8");
+
+  console.log(`\nBitti. Eklenen kazanım: ${toplamEklendi}, hatalı ders: ${hata}, SINIF? ders sayısı: ${rapor.length}`);
+  console.log(`Sınıf raporu: ${raporPath}  (SINIF? olan dersler burada listelenmiştir; sınıf değerlerini buna göre düzenleyebilirsin)`);
 }
 
 main().catch((e) => {
