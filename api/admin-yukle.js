@@ -4,10 +4,15 @@
 // Koruma: x-admin-key başlığındaki anahtarı ADMIN_KEY env'iyle doğrular.
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
 
 const ADMIN_KEY = process.env.ADMIN_KEY || "";
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function md5hex(s) {
+  return createHash("md5").update(String(s ?? "")).digest("hex");
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -50,6 +55,12 @@ export default async function handler(req, res) {
 
     if (temiz.length === 0) return res.status(400).json({ error: "Geçerli (ders+kazanım+sınıf) satırı bulunamadı." });
 
+    // Uzun metinler btree index sınırını aştığı için unique index hash üzerinde.
+    // Bu yüzden her satıra kazanim_hash ekliyoruz (unique tespiti bu değerden yapılır).
+    temiz.forEach((t) => {
+      t.kazanim_hash = md5hex(t.kazanim);
+    });
+
     const supabase = createClient(url, key);
     const BATCH = 500;
     let islenen = 0;
@@ -57,7 +68,7 @@ export default async function handler(req, res) {
       const chunk = temiz.slice(i, i + BATCH);
       const { error } = await supabase
         .from("kazanimlar")
-        .upsert(chunk, { onConflict: "sinif,kategori,ders,unite,kazanim", ignoreDuplicates: true });
+        .upsert(chunk, { onConflict: "sinif,kategori,ders,unite,kazanim_hash", ignoreDuplicates: true });
       if (error) throw new Error(error.message);
       islenen += chunk.length;
     }

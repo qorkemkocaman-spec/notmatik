@@ -8,10 +8,15 @@
 //  DELETE -> id ile sil
 // ============================================================
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
 
 const ADMIN_KEY = process.env.ADMIN_KEY || "";
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function md5hex(s) {
+  return createHash("md5").update(String(s ?? "")).digest("hex");
+}
 
 // ---- Doğal (natural) sıralama yardımcıları ----
 function tokenize(s) {
@@ -106,16 +111,21 @@ export default async function handler(req, res) {
     catch { return res.status(400).json({ error: "Geçersiz JSON gövde." }); }
 
     // Alan eşleme: kademe -> sinif
-    const alan = (r) => ({
-      sinif: String(r.kademe ?? r.sinif ?? "").trim(),
-      kategori: String(r.kategori ?? "").trim(),
-      ders: String(r.ders ?? "").trim(),
-      unite: String(r.unite ?? "").trim(),
-      kazanim: String(r.kazanim ?? "").trim(),
-      puan_varsayilan: parseInt(r.puan_varsayilan ?? 10, 10) || 10,
-      kaynak: String(r.kaynak ?? "OtoNot").trim(),
-      kaynak_url: String(r.kaynak_url ?? "").trim(),
-    });
+    const alan = (r) => {
+      const d = {
+        sinif: String(r.kademe ?? r.sinif ?? "").trim(),
+        kategori: String(r.kategori ?? "").trim(),
+        ders: String(r.ders ?? "").trim(),
+        unite: String(r.unite ?? "").trim(),
+        kazanim: String(r.kazanim ?? "").trim(),
+        puan_varsayilan: parseInt(r.puan_varsayilan ?? 10, 10) || 10,
+        kaynak: String(r.kaynak ?? "OtoNot").trim(),
+        kaynak_url: String(r.kaynak_url ?? "").trim(),
+      };
+      // Uzun metinler btree index sınırını aştığı için unique index hash üzerinde
+      d.kazanim_hash = md5hex(d.kazanim);
+      return d;
+    };
 
     // ---------------- EKLE ----------------
     if (method === "POST") {
