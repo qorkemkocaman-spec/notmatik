@@ -13,6 +13,48 @@ const ADMIN_KEY = process.env.ADMIN_KEY || "";
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// ---- Doğal (natural) sıralama yardımcıları ----
+function tokenize(s) {
+  const out = [];
+  const t = String(s ?? "");
+  const re = /[0-9]+|[^\d\s_.-]+/g;
+  let m;
+  while ((m = re.exec(t))) {
+    const v = m[0];
+    if (/^[0-9]+$/.test(v)) out.push(parseInt(v, 10));
+    else if (/[a-zA-ZğüşöçıİĞÜŞÖÇ]/.test(v)) out.push(v.toLocaleLowerCase("tr-TR"));
+    else out.push(v);
+  }
+  return out;
+}
+function naturalCompare(a, b) {
+  const ka = tokenize(a);
+  const kb = tokenize(b);
+  const n = Math.max(ka.length, kb.length);
+  for (let i = 0; i < n; i++) {
+    const x = ka[i];
+    const y = kb[i];
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    if (typeof x === "number" && typeof y === "number") {
+      if (x !== y) return x - y;
+    } else {
+      const xs = String(x);
+      const ys = String(y);
+      if (xs !== ys) return xs < ys ? -1 : 1;
+    }
+  }
+  return 0;
+}
+function kazanimSira(a, b) {
+  const alanlar = ["sinif", "kategori", "ders", "unite", "kazanim"];
+  for (const al of alanlar) {
+    const c = naturalCompare(a[al], b[al]);
+    if (c !== 0) return c;
+  }
+  return 0;
+}
+
 export default async function handler(req, res) {
   // Admin yetkisi
   const gelen = req.headers["x-admin-key"];
@@ -30,16 +72,15 @@ export default async function handler(req, res) {
       const { kademe, kategori, ders, unite } = req.query;
       let q = supabase
         .from("kazanimlar")
-        .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url")
-        .order("sinif")
-        .order("ders");
+        .select("id,sinif,kategori,ders,unite,kazanim,puan_varsayilan,kaynak,kaynak_url");
       if (kademe) q = q.eq("sinif", kademe);
       if (kategori) q = q.eq("kategori", kategori);
       if (ders) q = q.eq("ders", ders);
       if (unite) q = q.eq("unite", unite);
       const { data, error } = await q;
       if (error) throw new Error(error.message);
-      return res.status(200).json({ data: (data || []).map((r) => ({ ...r, kademe: r.sinif })) });
+      const sirali = (data || []).slice().sort(kazanimSira);
+      return res.status(200).json({ data: sirali.map((r) => ({ ...r, kademe: r.sinif })) });
     }
 
     // ----------- JSON gövde hazırlama -----------
