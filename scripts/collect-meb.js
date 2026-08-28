@@ -33,6 +33,7 @@ import {
   pdfiIndirAndCikar,
   enGuncelProgramlari,
   kademeBelirle,
+  okulTuruBelirle,
   kategoriBelirle,
   dersAdiTemizle,
   sinifAraligaUygun,
@@ -105,6 +106,7 @@ async function main() {
 
     const kategori = kategoriBelirle(p);
     const dersAdi = dersAdiTemizle(p.ders) || p.ders;
+    const okulTuru = okulTuruBelirle(p) || "";
 
     const rows = oc
       .map((o) => {
@@ -122,6 +124,7 @@ async function main() {
         }
         return {
           sinif: kademe,                 // "kademe" sütunu
+          okul_turu: okulTuru,           // TTKB okul türü (kademe bandından ayrı)
           kazanim_hash: kazanimHash(o.kod, o.baslik),
           kategori,                      // Ortak Ders | Seçmeli Ders
           ders: dersAdi,                 // "ders" sütunu (temiz ad)

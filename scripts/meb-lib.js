@@ -67,6 +67,18 @@ function adCekirdek(ad) {
     .trim();
 }
 
+// Normalize edilmiş iki ders çekirdeği arasındaki EŞLEŞME SKORU.
+//   * tam eşitlik          -> çok yüksek (aynı ders)
+//   * hedef, çizelge adını içeriyor -> yüksek (en yaygın: envanter adı uzun, çizelge adı kısa)
+//   * tersi (çizelge adı hedefi içeriyor) -> düşük (zayıf; "Ritim ve HALK OYUNLARI" gibi yanlış eşleşmeyi ayıklar)
+function cizelgeSkor(hedef, kc) {
+  if (!hedef || !kc) return 0;
+  if (kc === hedef) return 10000;
+  if (hedef.includes(kc)) return 5000 + kc.length;
+  if (kc.includes(hedef)) return kc.length;
+  return 0;
+}
+
 // ders çekirdeği -> { kaynak, siniflar } eşleşmesini tüm çizelge kaynaklarından bulur.
 function cizelgeSiniflari(dersAdi) {
   const db = cizelgeDb();
@@ -77,13 +89,28 @@ function cizelgeSiniflari(dersAdi) {
   for (const [kaynakId, kaynak] of Object.entries(db.kaynaklar || {})) {
     for (const [kayitAd, siniflar] of Object.entries(kaynak.ders || {})) {
       if (!siniflar || !siniflar.length) continue;
-      const kc = adCekirdek(kayitAd);
-      let skor = 0;
-      if (hedef && kc && (hedef.includes(kc) || kc.includes(hedef))) skor = kc.length;
+      const skor = cizelgeSkor(hedef, adCekirdek(kayitAd));
       if (skor >= 5 && skor > enSkor) { enSkor = skor; enIyi = { kaynak: kaynakId, siniflar }; }
     }
   }
   return enIyi;
+}
+
+// ders çekirdeği -> eşleşen TÜM çizelge kaynaklarını (skor azalan) döndürür.
+function cizelgeKaynaklari(dersAdi) {
+  const db = cizelgeDb();
+  if (!db) return [];
+  const hedef = adCekirdek(dersAdi);
+  const sonuc = [];
+  for (const [kaynakId, kaynak] of Object.entries(db.kaynaklar || {})) {
+    for (const [kayitAd, siniflar] of Object.entries(kaynak.ders || {})) {
+      if (!siniflar || !siniflar.length) continue;
+      const skor = cizelgeSkor(hedef, adCekirdek(kayitAd));
+      if (skor >= 5) sonuc.push({ kaynak: kaynakId, siniflar, skor });
+    }
+  }
+  sonuc.sort((a, b) => b.skor - a.skor);
+  return sonuc;
 }
 
 // Çizelge sınıflarına göre kademe bandı.
@@ -101,6 +128,51 @@ export function cizelgeKademe(dersAdi) {
   const e = cizelgeSiniflari(dersAdi);
   if (!e) return null;
   return kademeFromSiniflar(e.siniflar);
+}
+
+// TTKB çizelge kaynak id'si -> okul türü adı (kullanıcı dostu, standart).
+export const OKUL_TURU_ADI = {
+  ilkogretim: "İlkokul-Ortaokul",
+  "imamhatip-ortaokul": "İmam Hatip Ortaokulu",
+  "anadolu-fen-sosyal": "Anadolu/Fen/Sosyal Lisesi",
+  imamhatip_lise: "Anadolu İmam Hatip Lisesi",
+  spor_lise: "Spor Lisesi",
+  fen_lise: "Fen Lisesi",
+  gsl_muzik: "Güzel Sanatlar Lisesi",
+};
+
+// Bir programın TTKB okul türünü belirler (kademe BANDINDAN ayrı, tek değer).
+//   - özel programlı kategoriler (İmam Hatip, GSL, Spor Lisesi, Meslek vb.) doğrudan
+//   - genel derslerde çizelge DB'sinden kaynağın okul türü
+//   - bulunamazsa kademe bandı adına düşer ("İlkokul"/"Ortaokul"/"Lise")
+export function okulTuruBelirle(prog) {
+  const K = (prog.kategori || "").toLocaleLowerCase("tr-TR");
+  const ad = String(prog.ders || "");
+
+  if (K.includes("imam hatip")) {
+    const ar = sinifAraligi(ad);
+    const lise = ar && ar[0] >= 9;
+    return lise ? "Anadolu İmam Hatip Lisesi" : "İmam Hatip Ortaokulu";
+  }
+  if (K.includes("güzel sanatlar")) return "Güzel Sanatlar Lisesi";
+  if (K.includes("spor lise")) return "Spor Lisesi";
+  if (K.includes("müzik okul")) return "Güzel Sanatlar Lisesi (Müzik)";
+  if (K.includes("spor ortaokul")) return "Spor Ortaokulu";
+  if (K.includes("özel eğitim")) return "Özel Eğitim";
+
+  // Genel derslerde çizelge DB kaynağından okul türü.
+  // Ders birden çok çizelgede okutuluyorsa (örn. HALK hem normal hem İHO ortaokulda)
+  // kademe BANDINA uyan kaynağı yeğle; yoksa en yüksek skorlu kaynak.
+  const kad = kademeBelirle(prog, null);
+  const adaylar = cizelgeKaynaklari(ad);
+  if (adaylar.length) {
+    const uygun = adaylar.find((a) => kademeFromSiniflar(a.siniflar) === kad);
+    const sec = uygun || adaylar[0];
+    if (OKUL_TURU_ADI[sec.kaynak]) return OKUL_TURU_ADI[sec.kaynak];
+  }
+
+  if (kad === "İlkokul" || kad === "Ortaokul" || kad === "Lise" || kad === "İHO") return kad;
+  return null;
 }
 
 // Ders adından sınıf ARALIĞINI bul: "(1-4)", "(5-8)", "(9-12)", "(4. Sınıf)" ...
@@ -189,7 +261,7 @@ export function kademeBelirle(prog, sinif) {
 
   if (K.includes("imam hatip")) return "İHO";
   if (K.includes("güzel sanatlar")) return "Güzel Sanatlar Lisesi";
-  if (K.includes("spor lises")) return "Spor Lisesi";
+  if (K.includes("spor lise")) return "Spor Lisesi";
 
   // Kullanıcının 7 kademe listesine doğrudan uymayan gruplar -> rapora
   if (

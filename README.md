@@ -69,6 +69,7 @@ Her satır şu sütunlarla DB'ye yazılır (`kazanimlar` tablosu):
 | Şablon sütunu | DB sütunu | İçerik |
 |---|---|---|
 | **kademe** | `sinif` | İlkokul / Ortaokul / İHO / Lise / Spor Lisesi / Güzel Sanatlar Lisesi / Meslek Lisesi |
+| **okul türü** | `okul_turu` | TTKB okul türü (band'dan ayrı): İlkokul-Ortaokul / İmam Hatip Ortaokulu / Anadolu İmam Hatip Lisesi / Anadolu-Fen-Sosyal Lisesi / Spor Lisesi / Fen Lisesi / Güzel Sanatlar Lisesi |
 | **kategori** | `kategori` | Ortak Ders \| Seçmeli Ders |
 | **ders** | `ders` | PDF'deki dersin temiz adı (ör. "Din Kültürü ve Ahlak Bilgisi") |
 | **unite** | `unite` | "9. Sınıf 1. Tema: YAŞAM" / "4. Sınıf 1. Ünite: GÜNLÜK HAYAT VE DİN" |
