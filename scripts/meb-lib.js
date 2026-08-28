@@ -12,8 +12,11 @@
 //   kazanim = "BİY.9.1.1 Biyolojideki dönüm noktalarını ... sorgulayabilme"
 //   puan    = 10
 // ============================================================
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
 // Seçmeli dersler: adında "SEÇMELİ" geçmeyen ama ortaokul/temel eğitimde
 // seçmeli olarak okutulan dersler. Envanterin `secmeli` alanı yanlış üretilmiş
@@ -38,6 +41,66 @@ export function isSecmeliDers(dersAdi) {
   if (ust.includes("SEÇMELİ") || ust.includes("SECMELI")) return true;
   const kup = String(dersAdi || "").toLocaleLowerCase("tr-TR");
   return SECMELI_DERS_LISTESI.some((s) => kup.includes(s));
+}
+
+// ---- Çizelge DB (ders -> sınıflar) fallback yardımcıları ----
+// TTKB çizelgelerinden üretilen data/cizelge_ders_db.json, sınıfı koddan
+// çıkmayan 2-segmentli dersler (ör. ÇEVRE, HALK) için kademe tespitini sağlar.
+let _cizelgeDb = null;
+function cizelgeDb() {
+  if (_cizelgeDb) return _cizelgeDb;
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const p = path.join(__dirname, "..", "data", "cizelge_ders_db.json");
+  _cizelgeDb = existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : null;
+  return _cizelgeDb;
+}
+
+// Ders adını eşleştirme için normalize eder: "DERSİ", yıl, parantezleri atar.
+function adCekirdek(ad) {
+  return String(ad || "")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/\bdersi\b/gi, "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/öğretim programı/gi, "")
+    .replace(/[^a-zçğıöşü0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// ders çekirdeği -> { kaynak, siniflar } eşleşmesini tüm çizelge kaynaklarından bulur.
+function cizelgeSiniflari(dersAdi) {
+  const db = cizelgeDb();
+  if (!db) return null;
+  const hedef = adCekirdek(dersAdi);
+  let enIyi = null;
+  let enSkor = 0;
+  for (const [kaynakId, kaynak] of Object.entries(db.kaynaklar || {})) {
+    for (const [kayitAd, siniflar] of Object.entries(kaynak.ders || {})) {
+      if (!siniflar || !siniflar.length) continue;
+      const kc = adCekirdek(kayitAd);
+      let skor = 0;
+      if (hedef && kc && (hedef.includes(kc) || kc.includes(hedef))) skor = kc.length;
+      if (skor >= 5 && skor > enSkor) { enSkor = skor; enIyi = { kaynak: kaynakId, siniflar }; }
+    }
+  }
+  return enIyi;
+}
+
+// Çizelge sınıflarına göre kademe bandı.
+export function kademeFromSiniflar(siniflar) {
+  if (!siniflar || !siniflar.length) return null;
+  const mn = Math.min(...siniflar);
+  const mx = Math.max(...siniflar);
+  if (mx >= 9) return "Lise";
+  if (mx <= 4) return "İlkokul";
+  return "Ortaokul";
+}
+
+// Ders adı -> çizelge sınıfları -> kademe fallback'i.
+export function cizelgeKademe(dersAdi) {
+  const e = cizelgeSiniflari(dersAdi);
+  if (!e) return null;
+  return kademeFromSiniflar(e.siniflar);
 }
 
 // Ders adından sınıf ARALIĞINI bul: "(1-4)", "(5-8)", "(9-12)", "(4. Sınıf)" ...
@@ -146,7 +209,9 @@ export function kademeBelirle(prog, sinif) {
       if (ar[0] >= 9) return "Lise";
       if (ar[0] === ar[1]) return sinifKademe(ar[0]);
     }
-    return null;
+    // Sınıfı koddan çıkmayan (2 segmentli) seçmeli/temel derslerde çizelge DB'sine bak.
+    const cz = cizelgeKademe(prog.ders);
+    return cz || null;
   }
   if (K.includes("ortaöğretim")) {
     return /MESLEK/.test(ad) ? "Meslek Lisesi" : "Lise";
@@ -158,7 +223,8 @@ export function kademeBelirle(prog, sinif) {
     if (ar[0] >= 9) return "Lise";
     return "Ortaokul";
   }
-  return null;
+  const cz = cizelgeKademe(prog.ders);
+  return cz || null;
 }
 
 // Ders adını temizle: kademe/parantez/yıl artıklarını at, okunaklı bırak.
@@ -221,16 +287,15 @@ export function parseOgrenmeCiktilari(text) {
   const re =
     /((?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.)\s*([A-Za-zÀ-ž0-9ÇĞİÖŞÜçğıöşüÂâÎîÛû].{0,300}?)(?=\s+(?:(?:[abcçdefgğhıijklmnoöprsştuüvyz])\s*\)\s|(?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.|İÇERİK ÇERÇEVESİ|ÖĞRENME ÖĞRETME UYGULAMALARI)|$)/g;
 
-  const result = [];
+  const candidates = [];
   const seen = new Set();
   let m;
   while ((m = re.exec(flat)) !== null) {
     const kod = m[1].replace(/\.$/, "");
     const parts = kod.split(".");
     const sayilar = parts.filter((p) => /^\d+$/.test(p)).map((p) => parseInt(p, 10));
-    // Ana öğrenme çıktısı gereği en az 3 sayısal parça (sınıf.bölüm.çıktı).
-    // İki parçalı eşleşmeler (örn. "BİY.9.1") tema/ünite etiketi olup atlanır.
-    if (sayilar.length < 3) continue;
+    // En az 2 sayısal parça iste (1 sayısal -> bölüm/ünite etiketi eşleşmesi, e.g. "BİY.9.").
+    if (sayilar.length < 2) continue;
     if (seen.has(kod)) continue;
     seen.add(kod);
 
@@ -243,10 +308,22 @@ export function parseOgrenmeCiktilari(text) {
     if (ekKod > 0) baslik = baslik.slice(0, ekKod).trim();
     if (!baslik || baslik.length < 6) continue;
 
-    const sinif = sayilar[0];
-    const bolumNo = sayilar[1] || 1;
-    result.push({ kod, sinif, bolumNo, sayilar, baslik });
+    candidates.push({ kod, sayilar, baslik });
   }
+
+  // DOKÜMAN BAZINDA ŞEMA TESPİTİ:
+  //  - 3 sayısal parçalı (sınıf.bölüm.çıktı, BİY.9.1.1) gerçek çıktı VARSA -> bu
+  //    doküman 3 segmentlidir; 2 sayısal eşleşmeler (BİY.9.1) tema/ünite etiketidir.
+  //  - Hiç 3 sayısal yoksa (ÇEVRE, İNG, HALK gibi) -> 2 sayısal (bölüm.çıktı) gerçektir.
+  const has3 = candidates.some((c) => c.sayilar.length >= 3);
+  const result = candidates
+    .filter((c) => (has3 ? c.sayilar.length >= 3 : true))
+    .map((c) => {
+      // 3 segmentte sınıf + bölüm; 2 segmentte sadece bölüm (sınıf kodda yok -> null).
+      const sinif = c.sayilar.length >= 3 ? c.sayilar[0] : null;
+      const bolumNo = c.sayilar.length >= 3 ? (c.sayilar[1] || 1) : c.sayilar[0];
+      return { kod: c.kod, sinif, bolumNo, sayilar: c.sayilar, baslik: c.baslik };
+    });
 
   // Bölüm adlarını, çıktıların sırasındaki benzersiz (sınıf,bölüm) kombinasyonları
   // ile birebir eşleştir (her sınıfta bölümler 1'den yeniden başlar).
@@ -271,8 +348,12 @@ export function parseOgrenmeCiktilari(text) {
     const ad = b && b.ad ? b.ad : "";
     o.bolumKelime = kelime;
     o.bolumAdi = ad;
-    // "9. Sınıf 1. Tema: YAŞAM"  |  "4. Sınıf 1. Ünite: GÜNLÜK HAYAT VE DİN"
-    o.unite = `${o.sinif}. Sınıf ${o.bolumNo}. ${kelime}${ad ? ": " + ad : ""}`;
+    // 3 segmentli: "9. Sınıf 1. Tema: YAŞAM" | 2 segmentli (sınıf yok): "1. ÜNİTE: İNSAN VE DOĞA"
+    const ek = ad ? ": " + ad : "";
+    o.unite =
+      o.sinif == null
+        ? `${o.bolumNo}. ${kelime}${ek}`
+        : `${o.sinif}. Sınıf ${o.bolumNo}. ${kelime}${ek}`;
   }
   return result;
 }

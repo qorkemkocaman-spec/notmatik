@@ -56,6 +56,12 @@ jobs:
       - name: MEB envanterini güncelle
         run: node scripts/sync-meb.js
 
+      - name: TTKB ders çizelgelerini indir (ders->kademe DB için)
+        run: node scripts/cizelge-topla.mjs
+
+      - name: Çizelge DB üret (pozisyonlu; 2-segmentli derslerin kademesi)
+        run: node scripts/cizelge-pozisyonlu-cikar.mjs
+
       - name: Öğrenme çıktılarını Supabase'e işle (yalnız TYMM + en güncel yıl)
         run: node scripts/collect-meb.js
 

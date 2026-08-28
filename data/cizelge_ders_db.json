@@ -1,0 +1,622 @@
+{
+  "olusturma": "2026-08-28T06:15:31.390Z",
+  "kaynaklar": {
+    "ilkogretim": {
+      "etiket": "İlköğretim (İlkokul+Ortaokul)",
+      "baslikliSayfa": 1,
+      "ders": {
+        "Türkçe": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Matematik": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Hayat Bilgisi": [
+          1,
+          2,
+          3
+        ],
+        "Fen Bilimleri": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Sosyal Bilgiler": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "Yabancı Dil": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Din Kültürü ve Ahlak Bilgisi": [
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Görsel Sanatlar": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Müzik": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Beden Eğitimi ve Oyun": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "Beden Eğitimi ve Spor": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Teknoloji ve Tasarım": [
+          7,
+          8
+        ],
+        "Trafik Güvenliği": [
+          4
+        ],
+        "Bilişim Teknolojileri ve Yazılım": [
+          5,
+          6
+        ],
+        "Rehberlik ve Yönlendirme": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "İnsan Hakları, Vatandaşlık ve Demokrasi": [
+          4
+        ],
+        "ZORUNLU DERS SAATİ TOPLAMI": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "Matematik ve Bilim Uygulamaları (2)": [
+          6,
+          7
+        ],
+        "Okuma Becerileri (2)": [
+          5,
+          6
+        ],
+        "Yazarlık ve Yazma Becerileri (4)": [
+          8
+        ],
+        "Yaşayan Diller ve Lehçeler (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Yabancı Dil (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Çevre Eğitimi ve İklim Değişikliği (1)": [
+          6,
+          7,
+          8
+        ],
+        "Hukuk ve Adalet (1)": [
+          6,
+          7,
+          8
+        ],
+        "Düşünme Eğitimi (2)": [
+          8
+        ],
+        "Robotik Kodlama (2)": [
+          5,
+          6
+        ],
+        "Yapay Zeka Uygulamaları (2)": [
+          7,
+          8
+        ],
+        "Okul Temelli Sosyal Sorumluluk Çalışmaları (3)": [
+          6,
+          7,
+          8
+        ],
+        "Medya Okuryazarlığı (1)": [
+          7,
+          8
+        ],
+        "Temel Yaşam Becerileri (2)": [
+          8
+        ],
+        "Türk Sosyal Hayatında Aile (1)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Kur'an-ı Kerim (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Peygamberimizin Hayatı (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Temel Dinî Bilgiler (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Kültür ve Medeniyetimize Yön Verenler (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Ahlak ve Vatandaşlık Eğitimi (2)": [
+          8
+        ],
+        "Görgü Kuralları ve Nezaket (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Müzik (4)": [
+          8
+        ],
+        "Spor ve Fizikî Etkinlikler (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Masal ve Destanlarımız (2)": [
+          8
+        ],
+        "Halk Oyunları (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "SEÇMELİ DERS SAATİ TOPLAMI": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "SERBEST ETKİNLİKLER DERS SAATİ": [
+          1,
+          2,
+          3
+        ],
+        "TOPLAM DERS SAATİ": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      }
+    },
+    "imamhatip-ortaokul": {
+      "etiket": "İmam Hatip Ortaokulu",
+      "baslikliSayfa": 2,
+      "ders": {
+        "Türkçe": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Matematik": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Fen Bilimleri": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Sosyal Bilgiler": [
+          5,
+          6,
+          7
+        ],
+        "Yabancı Dil": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Din Kültürü ve Ahlak Bilgisi": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Görsel Sanatlar": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Müzik": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Beden Eğitimi ve Spor": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Teknoloji ve Tasarım": [
+          7,
+          8
+        ],
+        "Bilişim Teknolojileri ve Yazılım": [
+          5,
+          6
+        ],
+        "Rehberlik ve Yönlendirme": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Kur’an-ı Kerim": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Arapça": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Peygamberimizin Hayatı": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Temel Dinî Bilgiler": [
+          6,
+          7
+        ],
+        "ZORUNLU DERS SAATİ TOPLAMI": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Matematik ve Bilim Uygulamaları (2)": [
+          6,
+          7
+        ],
+        "Okuma Becerileri (2)": [
+          5,
+          6
+        ],
+        "Yazarlık ve Yazma Becerileri (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Yaşayan Diller ve Lehçeler (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Çevre Eğitimi ve İklim Değişikliği (1)": [
+          6,
+          7,
+          8
+        ],
+        "Hukuk ve Adalet (1)": [
+          6,
+          7,
+          8
+        ],
+        "Bilim": [
+          7,
+          8
+        ],
+        "Robotik Kodlama (2)": [
+          5,
+          6
+        ],
+        "Yapay Zeka Uygulamaları (2)": [
+          7,
+          8
+        ],
+        "Proje Tasarımı ve Uygulamaları": [
+          5,
+          6,
+          7
+        ],
+        "Okul Temelli Sosyal Sorumluluk Çalışmaları (2)": [
+          6,
+          7,
+          8
+        ],
+        "SEÇMELİ": [
+          7,
+          8
+        ],
+        "Afet Bilinci (2)": [
+          5,
+          6,
+          7
+        ],
+        "Temel Yaşam Becerileri (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Türk Sosyal Hayatında Aile (1)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Kur'an-ı Kerim (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Din, Ahlak ve Değer": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Ahlak ve Vatandaşlık Eğitimi (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Görgü Kuralları ve Nezaket (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Müzik (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Spor ve Fizikî Etkinlikler (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Oyun ve Oyun Etkinlikleri (2)": [
+          5,
+          6,
+          7
+        ],
+        "Dijital Sanatlar (2)": [
+          6,
+          7
+        ],
+        "Masal ve Destanlarımız (2)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Geleneksel Sanatlar (2)": [
+          6,
+          7
+        ],
+        "Halk Oyunları (4)": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "SEÇMELİ DERS SAATİ TOPLAMI": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "TOPLAM DERS SAATİ": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Beden Eğitimi, Oyun ve Müzik": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Müziksel İşitme, Okuma ve Yazma": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Türk Müziği Teori ve Uygulaması": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Koro ve Repertuvar": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Bireysel Çalgı Eğitimi": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Bireysel Ses Eğitimi": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Çalgı Toplulukları": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Müzik Tarihi": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Beden Eğitimi ve Sporun Temelleri": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Ritim Eğitimi ve Halk Oyunları": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Oyun ve Taktiksel Farkındalık": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Çocuklarda Atletik Performans Uygulamaları": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "Kapsamlı Spor Eğitimi": [
+          5,
+          6,
+          7,
+          8
+        ]
+      }
+    },
+    "anadolu-fen-sosyal": {
+      "etiket": "Anadolu/Fen/Sosyal Lisesi",
+      "baslikliSayfa": 0,
+      "ders": {}
+    },
+    "imamhatip_lise": {
+      "etiket": "Anadolu İmam Hatip Lisesi",
+      "baslikliSayfa": 2,
+      "ders": {
+        "(ç)": [
+          9
+        ]
+      }
+    },
+    "spor_lise": {
+      "etiket": "Spor Lisesi",
+      "baslikliSayfa": 0,
+      "ders": {}
+    },
+    "fen_lise": {
+      "etiket": "Fen Lisesi",
+      "baslikliSayfa": 0,
+      "ders": {}
+    },
+    "gsl_muzik": {
+      "etiket": "Güzel Sanatlar Lisesi Müzik",
+      "baslikliSayfa": 0,
+      "ders": {}
+    }
+  },
+  "uyarilar": [
+    "anadolu-fen-sosyal: ders çıkmadı",
+    "spor_lise: ders çıkmadı",
+    "fen_lise: ders çıkmadı",
+    "gsl_muzik: ders çıkmadı"
+  ]
+}
