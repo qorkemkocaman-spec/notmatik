@@ -251,6 +251,18 @@ function sinifKademe(sinif) {
   return "Lise";
 }
 
+// Sınıf ARALIĞINDAN tek bir kademe seçer:
+//   (1-4)/(1-3) -> İlkokul, (9-12)/(11-12) -> Lise,
+//   dar/net (5-5) -> sınıf kademesi, geçiş aralıklı (1-8, 2-8, 3-8, 5-8) -> orta noktaya göre.
+export function aralikKademe(ar) {
+  if (!ar || !ar.length) return null;
+  if (ar[1] <= 4) return "İlkokul";
+  if (ar[0] >= 9) return "Lise";
+  if (ar[0] === ar[1]) return sinifKademe(ar[0]);
+  const mid = (ar[0] + ar[1]) / 2;
+  return mid >= 5 ? "Ortaokul" : "İlkokul";
+}
+
 // Bir programı kullanıcının 7 kademe etiketinden birine eşler.
 // `sinif` verilirse (TYMM çıktısının sınıfı) geçiş aralıklı derslerde
 // doğru kademe seçilir (örn. "(4-8)": 4 -> İlkokul, 5-8 -> Ortaokul).
@@ -263,9 +275,11 @@ export function kademeBelirle(prog, sinif) {
   if (K.includes("güzel sanatlar")) return "Güzel Sanatlar Lisesi";
   if (K.includes("spor lise")) return "Spor Lisesi";
 
-  // Kullanıcının 7 kademe listesine doğrudan uymayan gruplar -> rapora
+  // Kullanıcının 7 kademe listesine doğrudan uymayan gruplar -> rapora.
+  // NOT: "müzik okulları" burada elenmez; o kategori (1-8)/(3-4)/(5-8) aralıklı genel
+  // müzik derslerini (Bireysel Ses, Bireysel Çalgı, Koro, Müzik Kültürü ...) temsil eder
+  // ve aşağıdaki aralık/sınıf mantığıyla kademeye düşülür.
   if (
-    K.includes("müzik okulları") ||
     K.includes("spor ortaokulları") ||
     K.includes("özel eğitim") ||
     K.includes("okul öncesi")
@@ -273,14 +287,10 @@ export function kademeBelirle(prog, sinif) {
     return null;
   }
 
-  if (K.includes("ortaokul") || K.includes("temel eğitim")) {
+  if (K.includes("ortaokul") || K.includes("temel eğitim") || K.includes("müzik okulları")) {
     if (sinif != null && sinif !== "SINIF?") return sinifKademe(+sinif);
     const ar = sinifAraligi(ad);
-    if (ar) {
-      if (ar[1] <= 4) return "İlkokul";
-      if (ar[0] >= 9) return "Lise";
-      if (ar[0] === ar[1]) return sinifKademe(ar[0]);
-    }
+    if (ar) return aralikKademe(ar);
     // Sınıfı koddan çıkmayan (2 segmentli) seçmeli/temel derslerde çizelge DB'sine bak.
     const cz = cizelgeKademe(prog.ders);
     return cz || null;
@@ -290,11 +300,7 @@ export function kademeBelirle(prog, sinif) {
   }
 
   const ar = sinifAraligi(ad);
-  if (ar) {
-    if (ar[1] <= 4) return "İlkokul";
-    if (ar[0] >= 9) return "Lise";
-    return "Ortaokul";
-  }
+  if (ar) return aralikKademe(ar);
   const cz = cizelgeKademe(prog.ders);
   return cz || null;
 }
@@ -351,13 +357,26 @@ export function bolumHaritasiCikar(flat) {
 //   "DKAB.4.1.1. Günlük hayatta ... ayırt edebilme"
 // Süreç bileşenleri (a) b) c) ...) ve açıklamalar HİÇBİRİNE dahil edilmez.
 // Sadece ana öğrenme çıktıları döndürülür; her biri sınıf/bölüm adı ile zenginleştirilir.
+// TYMM Ortak Metni / çizelge bileşen kod önekleri. Bunlar öğrenme çıktısı DEĞİLDİR
+// (alan becerisi SBAB/DAB/YDAB, kavramsal beceri KB, sosyal-duygusal beceri SDB,
+// okuryazarlık becerisi OB, eğilim E, değer D ...). Kod regex'i bunları da yakalayabildiğinden
+// (özellikle bitişik önekli formatlarda "SDB2.1.2." -> "SDB.2.1.2.") kara listeyle elenir.
+const BILESEN_ON_EKLERI = new Set([
+  "SDB", "KB", "SBAB", "DAB", "YDAB", "OB", "E", "D", "F", "B",
+]);
+
 export function parseOgrenmeCiktilari(text) {
-  const flat = text.replace(/\s*\|\s*/g, " ").replace(/\s+/g, " ");
+  const flatRaw = text.replace(/\s*\|\s*/g, " ").replace(/\s+/g, " ");
+  // Bitişik önek-kod formatı desteği: bazı derslerde "TDE1.1.1.", "RK2.4.1.",
+  // "DİH1.2." biçiminde önek ile ilk hane bitişik yazılmış. Bunları ayır ki
+  // gerçek öğrenme çıktıları da yakalanabilsin.
+  const flat = flatRaw.replace(/([A-ZÇĞİÖŞÜÂÎÛ]{1,6})(\d{1,2}(?:\.\d{1,2}){1,3}\.)/g, "$1.$2");
   const bolumler = bolumHaritasiCikar(flat);
 
   const kodRe = /(?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\./;
+  // Süreç bileşeni durdurucu: hem "a)" hem " a." biçimini tanır (GÖRGÜ gibi derslerde "a.").
   const re =
-    /((?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.)\s*([A-Za-zÀ-ž0-9ÇĞİÖŞÜçğıöşüÂâÎîÛû].{0,300}?)(?=\s+(?:(?:[abcçdefgğhıijklmnoöprsştuüvyz])\s*\)\s|(?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.|İÇERİK ÇERÇEVESİ|ÖĞRENME ÖĞRETME UYGULAMALARI)|$)/g;
+    /((?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.)\s*([A-Za-zÀ-ž0-9ÇĞİÖŞÜçğıöşüÂâÎîÛû].{0,300}?)(?=\s+(?:(?:[abcçdefgğhıijklmnoöprsştuüvyz])(?:\s*\)\s|\s*\.\s)|(?:[A-ZÇĞİÖŞÜ]{1,5})(?:\.[A-ZÇĞİÖŞÜ]{1,5})*\.\d{1,2}(?:\.\d{1,2}){1,3}\.|İÇERİK ÇERÇEVESİ|ÖĞRENME ÖĞRETME UYGULAMALARI)|$)/g;
 
   const candidates = [];
   const seen = new Set();
@@ -368,17 +387,23 @@ export function parseOgrenmeCiktilari(text) {
     const sayilar = parts.filter((p) => /^\d+$/.test(p)).map((p) => parseInt(p, 10));
     // En az 2 sayısal parça iste (1 sayısal -> bölüm/ünite etiketi eşleşmesi, e.g. "BİY.9.").
     if (sayilar.length < 2) continue;
-    if (seen.has(kod)) continue;
-    seen.add(kod);
+    // Alan becerisi/eğilim/değer kodlarını (SDB, KB, E, D ...) öğrenme çıktısı sanma.
+    if (BILESEN_ON_EKLERI.has(parts[0])) continue;
 
     let baslik = m[2].replace(/\s+/g, " ").trim();
-    baslik = baslik.split(/\s+[abcçdefgğhıijklmnoöprsştuüvyz]\s*\)\s/)[0].trim();
+    baslik = baslik.split(/\s+[abcçdefgğhıijklmnoöprsştuüvyz](?:\s*\)\s|\s*\.\s)/)[0].trim();
     baslik = baslik.split(/İÇERİK ÇERÇEVESİ/)[0].trim();
     baslik = baslik.split(/ÖĞRENME ÖĞRETME UYGULAMALARI/)[0].trim();
     baslik = baslik.split(/ÖĞRENME KANITLARI/)[0].trim();
     const ekKod = baslik.search(kodRe);
     if (ekKod > 0) baslik = baslik.slice(0, ekKod).trim();
     if (!baslik || baslik.length < 6) continue;
+
+    // seen kontrolü başlık doğrulamasından SONRA yapılır: içindekiler/tablo sahtelerinde
+    // aynı kod "bozuk/kısa başlık" ile ilk görünür; onu seen'e ekleyip gerçek çıktıyı
+    // engellememek için ancak geçerli bir başlık varsa kod tescillenir.
+    if (seen.has(kod)) continue;
+    seen.add(kod);
 
     candidates.push({ kod, sayilar, baslik });
   }
