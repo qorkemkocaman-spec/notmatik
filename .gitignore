@@ -16,8 +16,6 @@ data/sinif_raporu.json
 *.txt
 scripts/launch-collect.ps1
 scripts/run-collect.cjs
-scripts/cizelge-topla.mjs
-scripts/cizelge-ders-cikar.mjs
 scripts/onecek-sablon.mjs
 
 .vercel
